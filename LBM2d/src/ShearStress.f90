@@ -35,7 +35,7 @@ do q=1,qmom
        do mu=1,2
          do nu=1,2
            sigma(i,j,mu,nu)=(1.0d0 - (1.0d0/(2*tau))) &
-                            !*ffNonEq(i,j,q)*ee(nu,q)*ee(mu,q) &
+                            *ffNonEq(i,j,q)*ee(nu,q)*ee(mu,q) &
                             + sigma(i,j,mu,nu)
          enddo
        enddo
@@ -43,8 +43,8 @@ do q=1,qmom
    enddo
 enddo
 
-!write(*,*) sigma(5,5,1,1)
-write(*,*) ffNonEq(5,5,5)
+!write(*,*) sigma(6,6,2,1)
+!write(*,*) ffNonEq(6,6,6)
 endsubroutine wall_shear
 !*************************************************************************
 subroutine free_shear()

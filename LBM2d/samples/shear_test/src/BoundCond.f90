@@ -136,19 +136,19 @@ endsubroutine noslipy_before
 subroutine noslip_obstacle_before()
   integer :: i,j,q,m,n
   do q=1, qmom
-    do j=2,Ny+1
-      do i=2,Nx+1
+    do j=1,Ny
+      n=j-ee_int(2,q)
+      do i=1,Nx
         if(is_solid(i,j).eq.1) then
           m=i-ee_int(1,q)
-          n=j-ee_int(2,q)
           if((is_solid(i,n).eq.1).or.(is_solid(m,j).eq.1).or.(is_solid(m,n).eq.1)) then
              ff(i,j,q)=ff(m,n,q)
           endif
+      write(*,*) ff(i,j,q), i, j, q
+      write(*,*) '****************'
+      write(*,*) ff(m,n,q), m, n, q
+      write(*,*) '*******new step********'
         endif
-  !    write(*,*) ff(i,jy,q), i, jy, q
-  !    write(*,*) '****************'
-  !    write(*,*) ff(m,n,q), m, n, q
-  !    write(*,*) '*******new step********'
       enddo
     enddo
   enddo

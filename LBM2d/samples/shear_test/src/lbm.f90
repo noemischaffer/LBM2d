@@ -14,6 +14,7 @@ integer :: unit,iostat=0
 integer :: it
 open(unit=10,file='input',status='old')
 call rparam_cdata(10, iostat)
+call read_param_init(10, iostat)
 call read_bc(10,iostat)
 call read_fpars(10,iostat)
 close(10)

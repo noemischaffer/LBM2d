@@ -5,7 +5,7 @@ use Avg
 use messages 
 implicit none
 private
-public::initff, init_obstacle, construct_interface
+public:: read_param_init, initff, init_obstacle, construct_interface
 
 character (len=labellen) :: init_type='static'
 character (len=labellen) :: obstacle_type='circle'
