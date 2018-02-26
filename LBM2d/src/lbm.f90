@@ -12,6 +12,7 @@ use ShearStress
 implicit none
 integer :: unit,iostat=0
 integer :: it
+character (len=25) :: filename
 open(unit=10,file='input',status='old')
 call rparam_cdata(10, iostat)
 call read_param_init(10, iostat)
@@ -24,18 +25,20 @@ call allocate_avg()
 call allocate_shear()
 call initff()
 call init_obstacle()
-call construct_interface()
+call construct_surface()
 call initialize_bc()
 do it=1,iTMAX
   call set_boundary_before()
   call stream() 
   call calc_avg()
+  call vorticity()
+  call rwrite_density_uu()
   call comp_equilibrium_BGK()
   call collision()
   call set_boundary_after()
   call wall_shear()
+  call update_surface()
 enddo
-call rwrite_density_uu()
 call free_shear()
 call free_avg()
 call free_cdata()

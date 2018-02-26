@@ -10,6 +10,13 @@
 ! in terms of cache misses ! But as the SoA is closest to the pencil
 ! structures we use that now. 
 !***************************************************************
+!
+!The convention is that:
+!  if a loop goes between 1-Nx+2 (1-Ny+2) the loop index is i (j)
+!  if a loop goes between 2-Nx+1 (2-Ny+1) the loop index is k (l)
+!
+!***************************************************************
+
 module Evolve
   use Cdata
   use Sub
@@ -30,18 +37,15 @@ subroutine finalize_evolve()
 endsubroutine finalize_evolve
 !***************************************************************
 subroutine stream()
-  integer :: i,j,q,iin,jin
+  integer :: k,l,q,m,n
   do q=1,qmom
-     do j=2,Ny+1
-        jin=j-ee_int(2,q)
-        do i=2,Nx+1
-           if(is_solid(i,j).ne.1) then
-              iin=i-ee_int(1,q)
-              fftemp(i,j,q) = ff(iin,jin,q)
-              !write(*,*) fftemp(i,j,q), i, j, q
-              !write(*,*) '***************************'
-              !write(*,*) ff(iin, jin, q), iin, jin, q
-              !write(*,*) '************new step*************'
+     do l=2,Ny+1
+        n=l-ee_int(2,q)
+        do k=2,Nx+1
+           if(is_solid(k,l).ne.1) then
+              m=k-ee_int(1,q)
+              fftemp(k,l,q) = ff(m,n,q)
+             ! write(*,*) fftemp(i,j,q), i, j, q, 'streamed from', iin, jin, q
            endif
         enddo
      enddo
@@ -51,17 +55,17 @@ endsubroutine stream
 subroutine comp_equilibrium_BGK()
   use Avg
   use Force
-  integer :: q,i,j
+  integer :: q,k,l
   double precision,dimension(2) :: ueq
   double precision :: edotu,usqr
   do q=1,qmom
-     do j=2,Ny+1
-        do i=2,Nx+1
-           if(is_solid(i,j).ne.1) then
-              call get_ueq(uu(i-1,j-1,:),rho(i-1,j-1),ueq)
+     do l=2,Ny+1
+        do k=2,Nx+1
+           if(is_solid(k,l).ne.1) then
+              call get_ueq(uu(k-1,l-1,:),rho(k-1,l-1),ueq)
               edotu=dot2d(ee(:,q),ueq)
               usqr=dot2d(ueq,ueq)
-              ffEq(i,j,q) = weight(q)*rho(i-1,j-1)*(1.+3.*edotu/(vunit**2) &
+              ffEq(k,l,q) = weight(q)*rho(k-1,l-1)*(1.+3.*edotu/(vunit**2) &
                                        +(9./2.)*(edotu**2)/(vunit**4) &
                                        -(3./2.)*usqr/(vunit**2) &
                )
@@ -76,16 +80,20 @@ subroutine comp_equilibrium_BGK()
 endsubroutine comp_equilibrium_BGK
 !***************************************************************
 subroutine collision()
-  integer :: q,i,j
+  integer :: q,k,l
   do q=1,qmom
-     do j=2,Ny+1
-        do i=2,Nx+1
-           if(is_solid(i,j).ne.1) then
-              ff(i,j,q) = fftemp(i,j,q) + (ffEq(i,j,q)-fftemp(i,j,q))/tau
+     do l=2,Ny+1
+        do k=2,Nx+1
+           if(is_solid(k,l).ne.1) then
+              ff(k,l,q) = fftemp(k,l,q) + (ffEq(k,l,q)-fftemp(k,l,q))/tau
+              !write(*,*) ff(i,j,q), i, j
            endif
         enddo
      enddo
   enddo
+
+
+
 endsubroutine collision
 !***************************************************************
 endmodule Evolve

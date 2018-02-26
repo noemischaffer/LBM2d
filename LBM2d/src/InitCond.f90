@@ -1,3 +1,10 @@
+!***************************************************************
+!
+!The convention is that:
+!  if a loop goes between 1-Nx+2 (1-Ny+2) the loop index is i (j)
+!  if a loop goes between 2-Nx+1 (2-Ny+1) the loop index is k (l)
+!
+!***************************************************************
 module InitCond
 
 use Cdata
@@ -5,13 +12,12 @@ use Avg
 use messages 
 implicit none
 private
-public:: read_param_init, initff, init_obstacle, construct_interface
+public:: write_boundary,read_param_init, initff, init_obstacle, construct_surface, update_surface
 
 character (len=labellen) :: init_type='static'
 character (len=labellen) :: obstacle_type='circle'
-integer :: radius=4, center_x=5, center_y=5
-integer, allocatable, dimension(:,:) :: interface_coord
-logical::linterf=.false.
+double precision :: radius=1.0d0, center_x=5.0d0, center_y=5.0d0
+
 
 namelist /init_cond/& 
     init_type, obstacle_type, radius, center_x, center_y
@@ -22,23 +28,27 @@ subroutine read_param_init(unit,iostat)
 !read the namelist init_cond
   integer, intent(in) :: unit
   integer, intent(out) :: iostat
-  read(unit, NML=init_cond, IOSTAT=iostat) 
+  read(unit, NML=init_cond, IOSTAT=iostat)
 endsubroutine read_param_init
 !***************************************************************
 subroutine initff()
-integer :: i,j,q
+integer :: k,l,q
+
+
+allocate(refl_point(Nlarge,qmom))
+
 
 select case (init_type)
 case('static')
   do q=1,qmom
-     do j=2,Ny+1
-        do i=2,Nx+1
-           if(is_solid(i,j).ne.1) then
+     do l=2,Ny+1
+        do k=2,Nx+1
+           if(is_solid(k,l).ne.1) then
               if(q.eq.5) then
-                ff(i,j,q) = 1.0d0
+                ff(k,l,q) = 1.0d0
               else
-                ff(i,j,q) = 0.0d0
-              endif 
+                ff(k,l,q) = 0.0d0
+              endif
            endif
         enddo
      enddo
@@ -51,77 +61,105 @@ endsubroutine initff
 !***************************************************************
 subroutine init_obstacle()
 
-integer :: dist_square, i, j, q
+integer :: k, l, q
+double precision :: dist_square
 
 select case (obstacle_type)
 case('circle')
-  do q=1,qmom
-     do j=2,Ny+1
-        do i=2,Nx+1
-           dist_square=(center_x-i)**2 + (center_y-j)**2
-           if(dist_square.le.radius**2) then
-              is_solid(i,j)=1
-           endif
-           if(is_solid(i,j).eq.1) then
-                ff(i,j,q) = 0.0d0
+     do l=2,Ny+1
+        do k=2,Nx+1
+           if((xx(k-1)-center_x)**2 + (yy(l-1)-center_y)**2.le.radius**2) then
+             is_solid(k,l)=1
+             !if(is_solid(i,j).eq.1) then
+             !write(*,*) is_solid(i,j), i, j
+             !endif
+             ff(k,l,:) = 0.0d0
+             ff(k,l,5)=1.0d0
            endif
         enddo
      enddo
-  enddo
+case('rectangle')
 case default
         call fatal_error('initialize_obstacle',&
             'error in obstacle initialization! ')
 endselect
+open(unit=11, file='solid_points.txt', action='write', status='replace')
+do l=2, Ny+1
+do k=2, Nx+1
+if(is_solid(k,l).eq.1) then
+write(11,*) k, ',', l
+endif
+enddo
+enddo
+close(11)
+
 endsubroutine init_obstacle
 !***************************************************************
-subroutine construct_interface()
+subroutine construct_surface()
 
-integer :: Ninterface=0, i, j, j_up, j_down, i_left, i_right, kint=1
-do j=1,Ny
-   do i=1,Nx
-      if(is_solid(i,j).eq.1) then
-         j_up=j+1
-         j_down=j-1
-         i_left=i-1
-         i_right=i+1
-         if((is_solid(i_left,j_up).eq.1).and.(is_solid(i_left,j_down).eq.1) &
-            .and.(is_solid(i_right,j_up).eq.1).and.(is_solid(i_right,j_down).eq.1)) then
-            continue
-         else
-            Ninterface=Ninterface+1
-         endif
-      endif
-   enddo
-enddo
 
-allocate(interface_coord(2,Ninterface))
 
-do j=1,Ny
-   do i=1,Nx
-      if(is_solid(i,j).eq.1) then
-         j_up=j+1
-         j_down=j-1
-         i_left=i-1
-         i_right=i+1
-         if((is_solid(i_left,j_up).eq.1).and.(is_solid(i_left,j_down).eq.1) &
-            .and.(is_solid(i_right,j_up).eq.1).and.(is_solid(i_right,j_down).eq.1)) then
-            continue
-         else
-            interface_coord(1,kint)=i
-            interface_coord(2,kint)=j
-            kint=kint+1
-         endif
-      endif
-   enddo
-enddo
+allocate(surface(Nlarge,2))
 
-!      write(*,*) 'x coordinates of interface', interface_coord(1,:)
-!      write(*,*) 'y coordinates of interface', interface_coord(2,:)
+call update_surface()
 
-if (linterf .eqv. .true.) then
-     deallocate(interface_coord)
-endif
+refl_point(Nsurf,qmom)=0
 
-endsubroutine construct_interface
+endsubroutine construct_surface
 !***************************************************************
+subroutine update_surface()
+
+integer ::q,kk,m,n, k, l, l_up, l_down, k_left, k_right
+Nsurf=0
+
+open(unit=12, file='refl_points.txt', action='write', status='replace')
+!open(unit=15, file='refl_points_q.txt', action='write', status='replace')
+
+
+do l=2,Ny+1
+   do k=2,Nx+1
+      if(is_solid(k,l).eq.1) then
+        kk=0 
+        do q=1,qmom
+           m=k-ee_int(1,q)
+           n=l-ee_int(2,q)
+           if(is_solid(m,n).ne.1) then
+             !write(15,*) q
+             if(kk.eq.0) then            
+               Nsurf=Nsurf+1
+               surface(Nsurf,1)=k
+               surface(Nsurf,2)=l
+               kk=kk+1
+             endif
+             refl_point(Nsurf,q)=1
+             write(12,*) k,',', l
+             !write(15,*) 'compare with'
+             !write(15,*) q
+           endif
+         enddo
+      endif
+   enddo
+enddo
+!close(15)
+close(12)
+call write_boundary()
+
+endsubroutine update_surface
+!***************************************************************
+subroutine write_boundary()
+
+integer::jsurf,q
+
+open(unit=11, file='surface.txt', action='write', status='replace')
+!do q=1, qmom
+do jsurf=1, Nsurf
+write(11,*) surface(jsurf,1),',', surface(jsurf,2)
+!write(*,*) refl_point(jsurf,q)
+!write(*,*) refl_point(jsurf,q)
+enddo
+!enddo
+close(11)
+
+endsubroutine write_boundary
+
 endmodule InitCond

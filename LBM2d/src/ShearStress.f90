@@ -11,7 +11,6 @@ private
 public :: allocate_shear,  wall_shear, free_shear
 
 double precision, allocatable, dimension(:,:,:) :: ffNonEq
-double precision, allocatable, dimension(:,:,:,:) :: sigma
 logical :: lshear=.false.
 !**************************************************************************
 contains
@@ -43,7 +42,7 @@ do q=1,qmom
    enddo
 enddo
 
-!write(*,*) sigma(6,6,2,1)
+
 !write(*,*) ffNonEq(6,6,6)
 endsubroutine wall_shear
 !*************************************************************************

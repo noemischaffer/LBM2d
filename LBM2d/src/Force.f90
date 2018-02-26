@@ -10,6 +10,12 @@
 ! in terms of cache misses ! But as the SoA is closest to the pencil
 ! structures we use that now. 
 !***************************************************************
+!
+!The convention is that:
+!  if a loop goes between 1-Nx+2 (1-Ny+2) the loop index is i (j)
+!  if a loop goes between 2-Nx+1 (2-Ny+1) the loop index is k (l)
+!
+!***************************************************************
 module Force
   use Messages
   use Cdata
@@ -18,7 +24,7 @@ module Force
   private
   public :: get_ueq, read_fpars
   character (len=labellen) :: iforce='xgravity'
-  double precision :: famp=0.001, gm=0.001
+  double precision :: famp=1.0d0, gm=0.001
   namelist /force_pars/ &
      iforce,famp,gm
 !***************************************************************
@@ -36,7 +42,6 @@ subroutine get_ueq(uin,rhoin,ueq)
   double precision, intent(in) :: rhoin
   double precision,dimension(2), intent(out) :: ueq
   double precision, dimension(2) :: gg
-  gm=famp
   gg(1)=gm
   gg(2)=0.0d0
   select case (iforce)
