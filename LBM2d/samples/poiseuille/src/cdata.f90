@@ -21,6 +21,15 @@ module Cdata
   integer, allocatable, dimension(:,:) :: is_solid
   logical::lffaloc=.false.
   integer :: iTMAX
+  integer, allocatable, dimension(:,:) :: surface
+  double precision, allocatable, dimension(:,:,:,:) :: sigma
+  double precision, allocatable, dimension(:,:) :: curl_uu
+  double precision, allocatable, dimension(:) ::xx,yy
+integer, allocatable, dimension(:,:) :: refl_point
+integer :: Nlarge=1
+
+
+  integer :: Nsurf
 !
 namelist /cdata_pars/ &
      Nx,Ny,Lx,Ly,vunit,tau,iTMAX
@@ -37,9 +46,13 @@ subroutine rparam_cdata(unit,iostat)
 ! the two lines above may change depending on
 ! whether we are using PBC or not along a particular
 ! direction
+Nlarge=Nx*Ny
+
 endsubroutine rparam_cdata
 !***********************!
 subroutine allocate_cdata()
+integer :: i,j
+
 allocate(is_solid(Nx+2,Ny+2))
 is_solid=0
 allocate(ff(Nx+2,Ny+2,qmom))
@@ -48,6 +61,14 @@ allocate(fftemp(Nx+2,Ny+2,qmom))
 fftemp=1.0d0
 allocate(ffEq(Nx+2,Ny+2,qmom))
 ffEq=1.0d0
+allocate(xx(Nx))
+do i=1, Nx
+  xx(i)=i*dx
+enddo
+allocate(yy(Ny))
+do j=1, Ny
+  yy(j)=j*dy
+enddo
 lffaloc=.true.
 endsubroutine allocate_cdata
 !***************************************************************  

@@ -5,6 +5,11 @@
 !  if a loop goes between 2-Nx+1 (2-Ny+1) the loop index is k (l)
 !
 !***************************************************************
+!
+! A = (point_lb_x, point_lb_y)
+! B = (point_lt_x, point_lt_y)
+! D = (point_rb_x, point_rb_y)
+!
 module InitCond
 
 use Cdata
@@ -15,12 +20,16 @@ private
 public:: write_boundary,read_param_init, initff, init_obstacle, construct_surface, update_surface
 
 character (len=labellen) :: init_type='static'
-character (len=labellen) :: obstacle_type='circle'
-double precision :: radius=1.0d0, center_x=5.0d0, center_y=5.0d0
-
+character (len=labellen) :: obstacle_type='none'
+double precision :: radius=0.0d0, center_x=0.0d0, center_y=0.0d0
+double precision :: point_lb_x=0.0d0,point_lb_y=0.0d0
+double precision :: point_lt_x=0.0d0,point_lt_y=0.0d0
+double precision :: point_rb_x=0.0d0,point_rb_y=0.0d0
 
 namelist /init_cond/& 
-    init_type, obstacle_type, radius, center_x, center_y
+    init_type, obstacle_type, radius, center_x, center_y, &
+      point_lb_x,point_lb_y,point_lt_x,point_lt_y, &
+      point_rb_x,point_rb_y
 
 contains
 !***************************************************************
@@ -54,8 +63,8 @@ case('static')
      enddo
   enddo
 case default
-        call fatal_error('initialize_force',&
-            'error in force initialization! ')
+        call fatal_error('initialize_ff',&
+            'error in ff initialization! ')
 endselect
 endsubroutine initff
 !***************************************************************
@@ -63,22 +72,44 @@ subroutine init_obstacle()
 
 integer :: k, l, q
 double precision :: dist_square
+double precision :: AMdotAB, ABdotAB, AMdotAD, ADdotAD
+!
+! A = (point_lb_x, point_lb_y)
+! B = (point_lt_x, point_lt_y)
+! D = (point_rb_x, point_rb_y)
+!
 
 select case (obstacle_type)
+case('none')
 case('circle')
-     do l=2,Ny+1
-        do k=2,Nx+1
-           if((xx(k-1)-center_x)**2 + (yy(l-1)-center_y)**2.le.radius**2) then
-             is_solid(k,l)=1
-             !if(is_solid(i,j).eq.1) then
-             !write(*,*) is_solid(i,j), i, j
-             !endif
-             ff(k,l,:) = 0.0d0
-             ff(k,l,5)=1.0d0
-           endif
-        enddo
-     enddo
+  do l=2,Ny+1
+    do k=2,Nx+1
+      if((xx(k-1)-center_x)**2 + (yy(l-1)-center_y)**2.le.radius**2) then
+        is_solid(k,l)=1
+        ff(k,l,:)=0.0d0
+        ff(k,l,5)=1.0d0
+      endif
+    enddo
+  enddo
 case('rectangle')
+  do l=2,Ny+1
+    do k=2,Nx+1
+      AMdotAB = (xx(k-1)-point_lb_x)*(point_lt_x-point_lb_x) + &
+        (yy(l-1)-point_lb_y)*(point_lt_y-point_lb_y)
+      ABdotAB = (point_lt_x-point_lb_x)*(point_lt_x-point_lb_x) + &
+        (point_lt_y-point_lb_y)*(point_lt_y-point_lb_y)
+      AMdotAD = (xx(k-1)-point_lb_x)*(point_rb_x-point_lb_x) + &
+        (yy(l-1)-point_lb_y)*(point_rb_y-point_lb_y)
+      ADdotAD = (point_rb_x-point_lb_x)*(point_rb_x-point_lb_x) + &
+        (point_rb_y-point_lb_y)*(point_rb_y-point_lb_y)
+      if((0.lt.AMdotAB).and.(AMdotAB.lt.ABdotAB).and.(0.lt.AMdotAD).and.(AMdotAD.lt.ADdotAD)) then
+        is_solid(k,l)=1
+        ff(k,l,:)=0.0d0
+        ff(k,l,5)=1.0d0
+      endif
+    enddo
+  enddo
+
 case default
         call fatal_error('initialize_obstacle',&
             'error in obstacle initialization! ')

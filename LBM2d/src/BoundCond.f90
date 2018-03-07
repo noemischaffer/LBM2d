@@ -14,7 +14,7 @@ private
 public :: read_bc, initialize_bc, set_boundary_before,set_boundary_after
 character (len=labellen) :: bc_left='periodic',bc_right='periodic'
 character (len=labellen) :: bc_bot='noslip',bc_top='noslip'
-character (len=labellen) :: bc_obstacle='staircase'
+character (len=labellen) :: bc_obstacle='none'
 
 ! It is left, right, bottom, top
 namelist /bc_pars/ &
@@ -34,9 +34,14 @@ subroutine initialize_bc()
 ! Boundary types: rb, lb, tb, bb
 
 
+integer :: i,j
+
   if (bc_left.eq.'periodic') then
     if (bc_right.eq.'periodic') then
       dx=Lx/Nx
+      do i=1, Nx
+        xx(i)=i*dx
+      enddo
     else
     call fatal_error('initialize_bc','bc left and right dont match')
    endif 
@@ -44,6 +49,9 @@ subroutine initialize_bc()
   if (bc_bot.eq.'periodic') then
     if (bc_top.eq.'periodic') then
       dy=Ly/Ny
+      do j=1, Ny
+        yy(j)=j*dy
+      enddo
     else
     call fatal_error('initialize_bc','bc bot and top dont match')
    endif 
@@ -102,6 +110,7 @@ subroutine set_boundary_before()
   endselect
 
   select case(bc_obstacle)
+    case('none')
     case('staircase')
     call noslip_obstacle_before()
   case default
@@ -154,23 +163,6 @@ endsubroutine noslipy_before
 subroutine noslip_obstacle_before()
   integer :: k,l,q,m,n,jsurf
 
-
-!do q=1, qmom
-!do j=2, Ny+1
-!do i=2, Nx+1
-!write(*,*) ff(i,j,q), i, j, q
-!
-!enddo
-!enddo
-!enddo
-
-
-!do k=1, Nsurf-1
-!if(surface(k,1).ne.0) then
-!write(*,*) surface(k,1)
-!endif
-!enddo
-
 open(unit=15, file='stream_to.txt', action='write', status='replace')
 open(unit=16, file='stream_from.txt', action='write', status='replace')
 
@@ -195,16 +187,6 @@ open(unit=16, file='stream_from.txt', action='write', status='replace')
 
 close(15)
 close(16)
-
-!do q=1, qmom
-!do j=2, Ny+1
-!do i=2, Nx+1
-!write(*,*) ff(i,j,q), i, j, q
-
-!enddo
-!enddo
-!enddo
-
 
 endsubroutine noslip_obstacle_before
 !***************************************************************
@@ -235,10 +217,11 @@ subroutine set_boundary_after()
   endselect
 
   select case(bc_obstacle)
+    case('none')
     case('staircase')
-    call noslip_obstacle_after()
+      call noslip_obstacle_after()
     case default
-     call fatal_error('obstacle boundary after','bc not found')
+      call fatal_error('obstacle boundary after','bc not found')
   endselect
 endsubroutine set_boundary_after
 !***************************************************************

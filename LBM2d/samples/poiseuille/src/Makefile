@@ -10,7 +10,8 @@ default:
 	$(FC) $(FO) BoundCond.f90 cdata.o cdata.o Avg.o -o BoundCond.o
 	$(FC) $(FO) Force.f90 cdata.o sub.o messages.o -o Force.o 
 	$(FC) $(FO) Evolve.f90 cdata.o sub.o Avg.o messages.o Force.o -o Evolve.o 
-	$(FC) lbm.f90 InitCond.o BoundCond.o Evolve.o cdata.o sub.o Avg.o messages.o Force.o -o lbm.x 
+	$(FC) $(FO) ShearStress.f90 cdata.o Evolve.o -o ShearStress.o
+	$(FC) lbm.f90 InitCond.o BoundCond.o Evolve.o cdata.o sub.o Avg.o messages.o Force.o ShearStress.o -o lbm.x 
 clean :
 	-rm *.o *.mod *.out 
 

@@ -1,0 +1,330 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 10.4' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     13551,        322]
+NotebookOptionsPosition[     12975,        297]
+NotebookOutlinePosition[     13311,        312]
+CellTagsIndexPosition[     13268,        309]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"solids", " ", "=", 
+   RowBox[{"Import", "[", 
+    RowBox[{
+    "\"\<Documents//LBM/LBM2d/samples/shear_test/solid_points.txt\>\"", ",", 
+     " ", "\"\<CSV\>\""}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"surface", " ", "=", 
+   RowBox[{"Import", "[", 
+    RowBox[{
+    "\"\<Documents//LBM/LBM2d/samples/shear_test/surface.txt\>\"", ",", " ", 
+     "\"\<CSV\>\""}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"reflection", " ", "=", 
+   RowBox[{"Import", "[", 
+    RowBox[{
+    "\"\<Documents//LBM/LBM2d/samples/shear_test/refl_points.txt\>\"", ",", 
+     " ", "\"\<CSV\>\""}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"streamfrom", " ", "=", 
+   RowBox[{"Import", "[", 
+    RowBox[{
+    "\"\<Documents//LBM/LBM2d/samples/shear_test/stream_from.txt\>\"", ",", 
+     " ", "\"\<CSV\>\""}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"streamto", " ", "=", 
+   RowBox[{"Import", "[", 
+    RowBox[{
+    "\"\<Documents//LBM/LBM2d/samples/shear_test/stream_to.txt\>\"", ",", 
+     " ", "\"\<CSV\>\""}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"bounce", " ", "=", 
+    RowBox[{"Import", "[", 
+     RowBox[{
+     "\"\<Documents//LBM/LBM2d/samples/shear_test/bounce_back.txt\>\"", ",", 
+      " ", "\"\<CSV\>\""}], "]"}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]"}], "Input",
+ CellChangeTimes->{{3.728196352158999*^9, 3.728196375414673*^9}, 
+   3.7281964095513887`*^9, 3.728196560270651*^9, {3.728196591919444*^9, 
+   3.728196596718339*^9}, {3.728196650422804*^9, 3.7281966672974453`*^9}, {
+   3.7281967368636723`*^9, 3.728196767189314*^9}, {3.728196850652294*^9, 
+   3.728196855260043*^9}, {3.72819693804535*^9, 3.728196950861864*^9}, {
+   3.728197036536171*^9, 3.7281970636465816`*^9}, {3.7281971079516373`*^9, 
+   3.728197108822772*^9}, {3.728198131264742*^9, 3.728198141395936*^9}, {
+   3.728198211785338*^9, 3.728198211976124*^9}, 3.728198335582719*^9, 
+   3.728198539625328*^9, {3.728288448774461*^9, 3.728288464878449*^9}, {
+   3.728288544199164*^9, 3.728288562540955*^9}, {3.728288620063821*^9, 
+   3.728288645526884*^9}, {3.72829047367391*^9, 3.728290510649021*^9}, {
+   3.728291459739442*^9, 3.728291471491436*^9}, 3.728291541563525*^9, {
+   3.728291579171391*^9, 3.728291581451291*^9}, 3.728291636563573*^9, {
+   3.728293218325506*^9, 3.728293255533238*^9}, {3.7288897434872427`*^9, 
+   3.728889795071381*^9}, 3.728890024335054*^9, {3.728890093921195*^9, 
+   3.7288900972637653`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"solidpoints", "=", 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"solids", ",", " ", 
+     RowBox[{"PlotRange", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", "128"}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", "128"}], "}"}]}], "}"}]}], ",", 
+     RowBox[{"AspectRatio", "\[Rule]", "1"}]}], " ", "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"surfacepoints", "=", 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"surface", ",", 
+     RowBox[{"PlotStyle", "\[Rule]", "Red"}], ",", " ", 
+     RowBox[{"PlotRange", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", "128"}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", "128"}], "}"}]}], "}"}]}], ",", 
+     RowBox[{"AspectRatio", "\[Rule]", "1"}]}], " ", "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"reflpoints", "=", 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"reflection", ",", 
+     RowBox[{"PlotStyle", "\[Rule]", "Purple"}], ",", " ", 
+     RowBox[{"PlotRange", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", "128"}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", "128"}], "}"}]}], "}"}]}], ",", 
+     RowBox[{"AspectRatio", "\[Rule]", "1"}]}], " ", "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"streaminit", "=", 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"streamfrom", ",", 
+     RowBox[{"PlotStyle", "\[Rule]", "Orange"}], ",", " ", 
+     RowBox[{"PlotRange", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", "128"}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", "128"}], "}"}]}], "}"}]}], ",", 
+     RowBox[{"AspectRatio", "\[Rule]", "1"}], ",", 
+     RowBox[{"PlotMarkers", "\[Rule]", "\"\<*\>\""}]}], " ", "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"streamfinal", "=", 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"streamto", ",", 
+     RowBox[{"PlotStyle", "\[Rule]", "Green"}], ",", " ", 
+     RowBox[{"PlotRange", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"1", ",", "128"}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", "128"}], "}"}]}], "}"}]}], ",", 
+     RowBox[{"AspectRatio", "\[Rule]", "1"}]}], " ", "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"bounceback", "=", 
+    RowBox[{"ListPlot", "[", 
+     RowBox[{"bounce", ",", 
+      RowBox[{"PlotStyle", "\[Rule]", "Yellow"}], ",", " ", 
+      RowBox[{"PlotRange", "\[Rule]", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"1", ",", "128"}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"1", ",", "128"}], "}"}]}], "}"}]}], ",", 
+      RowBox[{"AspectRatio", "\[Rule]", "1"}], ",", " ", 
+      RowBox[{"PlotMarkers", "\[Rule]", "\"\<+\>\""}]}], "]"}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{"Show", "[", "solidpoints", "]"}], "\[IndentingNewLine]"}], "Input",
+ CellChangeTimes->{{3.728196659031901*^9, 3.728196674358787*^9}, 
+   3.7281968008318233`*^9, 3.728196877984133*^9, {3.728196911663951*^9, 
+   3.728196915751863*^9}, {3.728196984365985*^9, 3.72819699590749*^9}, {
+   3.7281970561840067`*^9, 3.7281970750206537`*^9}, {3.7281971114802322`*^9, 
+   3.728197112294641*^9}, {3.728198232953369*^9, 3.7281983187028027`*^9}, {
+   3.728198360481641*^9, 3.728198375712174*^9}, {3.728198407409566*^9, 
+   3.728198478838958*^9}, {3.728198950857011*^9, 3.728198978931237*^9}, {
+   3.7281990385465193`*^9, 3.7281990423950157`*^9}, {3.728288507527417*^9, 
+   3.728288525230667*^9}, {3.728288655415987*^9, 3.728288657110695*^9}, {
+   3.728290515681962*^9, 3.728290579871118*^9}, 3.7282910726358957`*^9, {
+   3.7282914370041656`*^9, 3.7282914377423887`*^9}, {3.728291616659422*^9, 
+   3.728291621075123*^9}, {3.728291654898551*^9, 3.7282916747311087`*^9}, {
+   3.7282917536846457`*^9, 3.7282917543634243`*^9}, {3.728292189107129*^9, 
+   3.728292308292767*^9}, {3.728292486037612*^9, 3.728292488388268*^9}, {
+   3.728292547653974*^9, 3.7282925618508873`*^9}, {3.7282925975030107`*^9, 
+   3.7282926295119762`*^9}, {3.728292678437541*^9, 3.728292682900551*^9}, {
+   3.728292727302931*^9, 3.7282927632971067`*^9}, {3.7282932717259693`*^9, 
+   3.72829330984517*^9}, {3.728293367911255*^9, 3.728293389455453*^9}, {
+   3.728293421348996*^9, 3.7282934227576923`*^9}, {3.7282996155749598`*^9, 
+   3.728299624737742*^9}, {3.728299656895955*^9, 3.728299671511272*^9}, {
+   3.728299708206707*^9, 3.728299709198057*^9}, {3.728628714979129*^9, 
+   3.7286287296966743`*^9}, {3.7286289844029617`*^9, 3.728629013593822*^9}, 
+   3.7286290542997293`*^9, {3.728629122418635*^9, 3.728629162195889*^9}, {
+   3.728629213217684*^9, 3.728629297491922*^9}, {3.728629550322484*^9, 
+   3.728629573722221*^9}, {3.7286296303716383`*^9, 3.728629637683196*^9}, {
+   3.728629699804769*^9, 3.728629700292104*^9}, {3.728629740089658*^9, 
+   3.728629747481038*^9}, {3.728889806608221*^9, 3.728889917208702*^9}, 
+   3.728890028965187*^9, {3.728890081241992*^9, 3.728890102421021*^9}}],
+
+Cell[BoxData[
+ GraphicsBox[{{}, {{}, 
+    {RGBColor[0.368417, 0.506779, 0.709798], PointSize[0.007333333333333334], 
+     AbsoluteThickness[1.6], PointBox[CompressedData["
+1:eJxd1EuO7EQQhlHDTlgCXVUuvx3AkPddwRUSY7bwLy2XBqhtSz49CR2nVMr4
+2vJ3f/3z5e9vu677+k3X/T8//+b6nD8fc8Hvz5nTAx7xhGe84BVveMeF+2P+
+cr/v5QGPeMIzXvCKN7zjuju4ex7PT79wj994wCOe8IwXvOIN77juDu5+wMe+
+3a/HfOEev/GARzzhGS94xRvecd0dfO57nePucTw//cQv3OM3HvCIJzzjBa94
+wzuuu4Ov/z89rvMf8ccxfzvmAz/xC/f4jQc84gnPeMEr3vCO6+7g6/05z/HZ
+6zrHZ7/QL/QL/UK/0C/0C/1Cv9Av9Av9Qr/QL/QL/UK/0C/0C/1Cv+73Yz7w
+E79wj994wCOe8IwXvOIN77juDr7ev/McX+/feY6774/npz/wAz/xC/f4jQc8
+4gnPeMEr3vCO6+7g632kZ+gZeoae3R/H/MAP/MQv3OM3HvCIJzzjBa94wzuu
+u4Ov9/M8x9f7eZ7j7id89C36Fn2LvkXfom/Rt+hb9C36Fn2LvkXfom/Rt+hb
+9C36Fn2LvkXfom/RN/QNfUPf0Df0DX1D39A39A19Q9/QN/QNfUPf0Df0DX1D
+39DXfo1+jX6Nfo1+jX6Nfo1+jX6Nfo1+jX6Nfo1+jX6Nfo1+jX6Nfo1+jX7d
+n8d84Cd+4R6/8YBHPOEZL3jFG95x3R18fT/Pc3x9P89zfH0f6Vf0K/oV/Yp+
+Rb+iX9Gv6Ff0K/oV/Yp+Rb+iX9Gv6Ff0K/rZK/QKvUKv0Cv0Cr1Cr9Ar9Aq9
+Qq/QK/QKvUKv0Cv0skejR6NHo0ejR6NHo0ejR6NHo0ejR6NHo0ejR6NHo0dj
+/+7LMV+4x2884BFPeMYLXvGGd1x3B1/fH/Yp9in2KfYp9in2KfYp9in2KfYp
+9in28b7hvuG+4b7hvuG+4b7hvuG+4b7+fuP3//O/P4Px4Q==
+      "]]}, {}}, {}},
+  AspectRatio->1,
+  Axes->{True, True},
+  AxesLabel->{None, None},
+  AxesOrigin->{1.635, 1.635},
+  DisplayFunction->Identity,
+  Frame->{{False, False}, {False, False}},
+  FrameLabel->{{None, None}, {None, None}},
+  FrameTicks->{{Automatic, Automatic}, {Automatic, Automatic}},
+  GridLines->{None, None},
+  GridLinesStyle->Directive[
+    GrayLevel[0.5, 0.4]],
+  ImagePadding->All,
+  Method->{"CoordinatesToolOptions" -> {"DisplayFunction" -> ({
+        (Part[{{Identity, Identity}, {Identity, Identity}}, 1, 2][#]& )[
+         Part[#, 1]], 
+        (Part[{{Identity, Identity}, {Identity, Identity}}, 2, 2][#]& )[
+         Part[#, 2]]}& ), "CopiedValueFunction" -> ({
+        (Part[{{Identity, Identity}, {Identity, Identity}}, 1, 2][#]& )[
+         Part[#, 1]], 
+        (Part[{{Identity, Identity}, {Identity, Identity}}, 2, 2][#]& )[
+         Part[#, 2]]}& )}},
+  PlotRange->{{1, 128}, {1, 128}},
+  PlotRangeClipping->True,
+  PlotRangePadding->{{0, 0}, {0, 0}},
+  Ticks->{Automatic, Automatic}]], "Output",
+ CellChangeTimes->{
+  3.72829971201899*^9, 3.728301887926375*^9, 3.728302587337092*^9, 
+   3.728302880062924*^9, 3.728303699894026*^9, {3.7286287053532267`*^9, 
+   3.728628731879653*^9}, {3.728628989176244*^9, 3.7286290169307413`*^9}, {
+   3.7286290485575457`*^9, 3.728629056349845*^9}, {3.728629111700244*^9, 
+   3.7286291653720217`*^9}, 3.7286292194004393`*^9, {3.728629565635419*^9, 
+   3.7286295764146214`*^9}, 3.728629641497154*^9, 3.728629683545887*^9, 
+   3.7286297499973497`*^9, 3.728889800276256*^9, {3.728889905439973*^9, 
+   3.728889920950468*^9}, {3.7288900564534483`*^9, 3.728890105055118*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Export", "[", 
+  RowBox[{
+  "\"\</home/noemi/Documents/LBM/LBM2d/samples/shear_test/bounce.eps\>\"", 
+   ",", "%525", ",", "\"\<EPS\>\""}], "]"}]], "Input",
+ NumberMarks->False],
+
+Cell[BoxData["\<\"/home/noemi/Documents/LBM/LBM2d/samples/shear_test/bounce.\
+eps\"\>"], "Output",
+ CellChangeTimes->{
+  3.728301906686905*^9, 3.7283025876856117`*^9, 3.7283028804501953`*^9, 
+   3.7283037002517776`*^9, {3.728628705781597*^9, 3.728628732184437*^9}, {
+   3.7286289894845753`*^9, 3.7286290172615833`*^9}, {3.728629048907391*^9, 
+   3.728629056657365*^9}, {3.72862911211281*^9, 3.728629165752042*^9}, 
+   3.728629219909422*^9, {3.7286295661513557`*^9, 3.7286295769053993`*^9}, 
+   3.7286296419396257`*^9, 3.728629684170499*^9, 3.728629750601138*^9, 
+   3.728889800603413*^9, {3.728889905653796*^9, 3.7288899211115227`*^9}, {
+   3.728890056743639*^9, 3.728890105308749*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Export", "[", 
+  RowBox[{
+  "\"\</home/noemi/Documents/LBM/LBM2d/samples/shear_test/bounce.eps\>\"", 
+   ",", "%511", ",", "\"\<EPS\>\""}], "]"}]], "Input",
+ NumberMarks->False],
+
+Cell[BoxData["\<\"/home/noemi/Documents/LBM/LBM2d/samples/shear_test/bounce.\
+eps\"\>"], "Output",
+ CellChangeTimes->{
+  3.7282997575528727`*^9, 3.7283018882833548`*^9, 3.728302587982411*^9, 
+   3.728302880815733*^9, 3.728303700624732*^9, {3.728628706172633*^9, 
+   3.7286287324755297`*^9}, {3.7286289898093147`*^9, 
+   3.7286290175536623`*^9}, {3.728629049233075*^9, 3.728629056974078*^9}, {
+   3.7286291124349127`*^9, 3.728629166032075*^9}, 3.728629220176524*^9, {
+   3.728629566442251*^9, 3.728629577196157*^9}, 3.7286296422233267`*^9, 
+   3.72862968453057*^9, 3.728629750966978*^9, 3.7288898007604523`*^9, {
+   3.728889905889926*^9, 3.72888992130403*^9}, {3.728890056975935*^9, 
+   3.728890105515706*^9}}]
+}, Open  ]]
+},
+WindowSize->{901, 1085},
+WindowMargins->{{Automatic, -22}, {0, Automatic}},
+FrontEndVersion->"10.4 for Linux x86 (64-bit) (April 11, 2016)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 2544, 54, 187, "Input"],
+Cell[CellGroupData[{
+Cell[3127, 78, 5176, 115, 319, "Input"],
+Cell[8306, 195, 2776, 54, 370, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[11119, 254, 201, 5, 55, "Input"],
+Cell[11323, 261, 686, 10, 32, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[12046, 276, 201, 5, 55, "Input"],
+Cell[12250, 283, 709, 11, 89, "Output"]
+}, Open  ]]
+}
+]
+*)
+

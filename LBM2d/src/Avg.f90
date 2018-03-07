@@ -43,7 +43,7 @@ endsubroutine allocate_avg
 !***************************************************************
 subroutine calc_avg()
   integer :: q, k, l 
-  uu=0.;rho=0.
+  uu=0.0d0;rho=0.0d0
   do q=1,qmom
     do l=2,Ny+1
       do k=2,Nx+1
@@ -54,13 +54,16 @@ subroutine calc_avg()
         else
           uu(k-1,l-1,1) = uu(k-1,l-1,1)+vunit*ff(k,l,q)*dot2d(ee(:,q),xhat)
           uu(k-1,l-1,2) = uu(k-1,l-1,2)+vunit*ff(k,l,q)*dot2d(ee(:,q),yhat)
-          rho(k-1,l-1) = rho(k-1,l-1) + ff(k,l,q)
+          rho(k-1,l-1) = rho(k-1,l-1)+ff(k,l,q)
+!          write(*,*) maxval(ff(:,:,:)), k, l
         endif
       enddo
     enddo
   enddo
+!  write(*,*) maxval(ff(:,:,:))
   uu(:,:,1)=uu(:,:,1)/rho(:,:)
   uu(:,:,2)=uu(:,:,2)/rho(:,:)
+
 endsubroutine calc_avg
 !*************************************************************** 
 subroutine vorticity()
@@ -83,6 +86,14 @@ integer :: i,j,q,m,n
      endif
     enddo
   enddo
+
+
+!  do j=2,Ny-1
+!    do i=2, Nx-1
+!      curl_uu(i,j) = (uu(i+1,j,2)-uu(i-1,j,2))/(2.0d0*dx) - (uu(i,j+1,1)-uu(i,j-1,1))/(2.0d0*dy)
+!    enddo
+!  enddo
+
 
 
 endsubroutine vorticity 
@@ -122,8 +133,17 @@ subroutine rwrite_density_uu()
   write(11,*) Ny
   write(11,*) uu(:,:,1)
   write(11,*) uu(:,:,2)
-  write(*,*) maxval(uu(:,:,1)),maxval(uu(:,:,2))
+  !write(*,*) maxval(uu(:,:,1)),maxval(uu(:,:,2))
   close(11)
+
+  open(unit=12, file='velocity_math_vx.txt', action='write', status='replace')
+  write(12,*) uu(:,:,1)
+  close(12)
+  open(unit=13, file='velocity_math_vy.txt', action='write', status='replace')
+  write(13,*) uu(:,:,2)
+  close(13)
+
+
 endsubroutine rwrite_density_uu
 !***************************************************************  
 subroutine free_avg()

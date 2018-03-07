@@ -1,26 +1,32 @@
 &cdata_pars
-  Nx=20
-  Ny=20
-  Lx=6.28318530717958648
-  Ly=6.28318530717958648
-  vunit=1.0
+  Nx=128
+  Ny=128
+  Lx=24
+  Ly=24
+  vunit=1
   tau=10.0
-  iTMAX=5
-
+  iTMAX=200
 /
 &init_cond
   init_type='static'
   obstacle_type='circle'
-  radius=3
-  center_x=5
-  center_y=5
+  radius=2
+  center_x=12
+  center_y=12
+  point_lb_x=5
+  point_lb_y=5
+  point_lt_x=5
+  point_lt_y=10
+  point_rb_x=10 
+  point_rb_y=5
 /
 &bc_pars
   bc_left='periodic'
   bc_right='periodic'
-  bc_bot='noslip'
-  bc_top='noslip'
+  bc_bot='periodic'
+  bc_top='periodic'
+  bc_obstacle='staircase'
 /
 &force_pars
   iforce='xgravity'
-  gm=0.001
+  gm=0.0045

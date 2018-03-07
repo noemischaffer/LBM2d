@@ -1,11 +1,11 @@
 &cdata_pars
-  Nx=20
-  Ny=20
-  Lx=6.28318530717958648
-  Ly=6.28318530717958648
+  Nx=40
+  Ny=40
+  Lx=12
+  Ly=12
   vunit=1.0
   tau=10.0
-  iTMAX=100
+  iTMAX=80
 /
 &init_cond
   init_type='static'
@@ -15,7 +15,8 @@
   bc_right='periodic'
   bc_bot='noslip'
   bc_top='noslip'
+  bc_obstacle='none'
 /
 &force_pars
   iforce='xgravity'
-  gm=0.001
+  gm=0.01

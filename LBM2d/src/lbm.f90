@@ -22,7 +22,7 @@ close(10)
 call allocate_cdata()
 call set_model()
 call allocate_avg()
-call allocate_shear()
+!call allocate_shear()
 call initff()
 call init_obstacle()
 call construct_surface()
@@ -36,10 +36,11 @@ do it=1,iTMAX
   call comp_equilibrium_BGK()
   call collision()
   call set_boundary_after()
-  call wall_shear()
+!  call wall_shear()
   call update_surface()
+  !write(*,*) it
 enddo
-call free_shear()
+!call free_shear()
 call free_avg()
 call free_cdata()
 endprogram lbm

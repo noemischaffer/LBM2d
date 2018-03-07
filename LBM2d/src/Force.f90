@@ -46,13 +46,9 @@ subroutine get_ueq(uin,rhoin,ueq)
   gg(2)=0.0d0
   select case (iforce)
   case('none')
-!     write(*,*) '*****ueq before****'
-!     write(*,*) ueq
      ueq=uin
-!     write(*,*) '*****ueq after****'
-!     write(*,*) ueq
   case('xgravity')
-     ueq=uin+(tau*gg)/rhoin
+     ueq=uin+((tau*gg)/rhoin)
   case default
      call fatal_error("force","iforce does not match")
   endselect
