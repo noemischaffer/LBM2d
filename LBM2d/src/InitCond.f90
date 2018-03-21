@@ -55,11 +55,7 @@ case('static')
    do q=1,qmom
       do l=2,Ny+1
          do k=2,Nx+1
-            if(q.eq.5) then
-               ff(k,l,q) = 1.0d0
-            else
-               ff(k,l,q) = 0.0d0
-            endif
+            ff(k,l,q) = weight(q)
          enddo
       enddo
    enddo

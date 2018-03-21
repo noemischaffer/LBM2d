@@ -48,7 +48,8 @@ subroutine get_ueq(uin,rhoin,ueq)
   case('none')
      ueq=uin
   case('xgravity')
-     ueq=uin+((tau*gg)/rhoin)
+!     ueq=uin+(tau*gg)/rhoin)
+     ueq=uin+((gg)/rhoin) !maybe this makes sense
   case default
      call fatal_error("force","iforce does not match")
   endselect

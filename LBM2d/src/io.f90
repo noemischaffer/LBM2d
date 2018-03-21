@@ -69,6 +69,7 @@ subroutine write_input()
 subroutine write_model_param()
   integer :: q,i,j
   integer :: unit=1
+  double precision :: norm
   character (len=labellen) :: model_file='model.param'
   write(*,*) 'Writing model parameters to file:',trim(datadir),'/',trim(model_param_file)
   open(unit,FILE=trim(datadir)//'/'//trim(model_param_file),FORM='formatted')
@@ -80,9 +81,13 @@ subroutine write_model_param()
      q=q+1
   enddo; enddo
   write(unit,*) comment_char,'----weights, mirrorq --------'
+  norm=0.0d0
   do q=1,qmom
      write(unit,*)q,weight(q),mirrorq(q)
+     norm=norm+weight(q)
   enddo
+  write(*,*) 'checking self-consistnecy, sum of weights:', norm
+  write(unit,*) 'checking self-consistnecy, sum of weights:', norm
   close(unit)
 !
 endsubroutine write_model_param
@@ -126,9 +131,9 @@ subroutine write_ts(itime)
   integer :: unit=3
   integer :: its
   if (itime.eq.0) then
-     write(*,*) 'it     ',(ts_name(its),its=1,Nts)
-     open(unit,FILE=trim(datadir)//'/'//trim(ts_file),FORM='formatted')
-     write(unit,*) 'it',(ts_name(its),its=1,Nts)
+     write(*,*)'    it     ',(ts_name(its),its=1,Nts)
+     open(unit,FILE=trim(datadir)//'/'//trim(ts_file),FORM='formatted',status='new')
+     write(unit,*) comment_char,'    it     ',(ts_name(its),its=1,Nts)
   close(unit)
   endif
   write(*,*) itime,(ts_data(its),its=1,Nts)

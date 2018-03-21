@@ -11,11 +11,11 @@ module Cdata
   double precision, parameter :: wrest=4.0d0/9.0d0, wudlr=1.0d0/9.0d0,wcorner=1.0d0/36.0d0
   integer :: Nx=16
   integer :: Ny=16
+  double precision :: Lx,Ly
   double precision, dimension(2,qmom) :: ee ! unit vectors of the lattice
   integer, dimension(2,qmom) :: ee_int ! integer unit vectors of the lattice  
   double precision,dimension(2) :: xhat=[1.0d0,0.0d0],yhat=[0.0d0,1.0d0]
   double precision :: vunit=1.0d0,tau=1.0d0
-  double precision :: Lx=2.0d0*d_pi,Ly=2.0d0*d_pi
   double precision :: dx=1.0d0,dy=1.0d0
   double precision,allocatable, dimension(:,:,:) :: ff,fftemp,ffEq
   integer, allocatable, dimension(:,:) :: is_solid

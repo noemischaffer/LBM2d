@@ -1,6 +1,7 @@
 #FC= /opt/local/bin/gfortran-mp-6
-FC= gfortran -fbounds-check
-FO=-c -g
+#FC= gfortran -fbounds-check
+#FO=-c -g
+include ${LBM}/.config
 default:
 	$(FC) $(FO) sub.f90 -o sub.o 
 	$(FC) $(FO) cdata.f90 -o cdata.o

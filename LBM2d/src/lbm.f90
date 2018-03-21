@@ -58,14 +58,11 @@ else
 endif
 write(*,*) '=== Starting time stepping ================='
 call initialize_diag()
-call write_ts(0)
 jouter=iTMAX/ndiag
 do it=1,jouter
    do iin=1,ndiag
-     call stream()
      call calc_avg()
-     call calc_diag()
-     call write_ts(it)
+     call stream()
      !  call vorticity()
      !  call rwrite_density_uu()
      call comp_equilibrium_BGK()
@@ -75,6 +72,7 @@ do it=1,jouter
      call boundary_condition()
   enddo
   !call calc_diag()
+  call calc_diag()
   call write_ts(it*ndiag)
 enddo
 write(*,*) '......done'

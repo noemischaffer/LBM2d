@@ -70,9 +70,9 @@ subroutine comp_equilibrium_BGK()
               call get_ueq(uu(k-1,l-1,:),rho(k-1,l-1),ueq)
               edotu=dot2d(ee(:,q),ueq)
               usqr=dot2d(ueq,ueq)
-              ffEq(k,l,q) = weight(q)*rho(k-1,l-1)*(1.+3.*edotu/(vunit**2) &
-                   +(9./2.)*(edotu**2)/(vunit**4) &
-                   -(3./2.)*usqr/(vunit**2) &
+              ffEq(k,l,q) = weight(q)*rho(k-1,l-1)*(1.+3.*edotu/(vunit) &
+                   +(9./2.)*(edotu**2)/(vunit**2) &
+                   -(3./2.)*usqr/(vunit**2) & ! is there is misprint here in the book ?
                    )
            endif
         enddo
