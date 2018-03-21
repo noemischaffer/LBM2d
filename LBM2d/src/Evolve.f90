@@ -42,6 +42,11 @@ subroutine stream()
      do l=2,Ny+1
         n=l-ee_int(2,q)
         do k=2,Nx+1
+           !
+           ! I stream-in to all points which are not "solid"(1)
+           ! which implies that I stream-in to surface points (0)
+           ! too.
+           !
            if(is_solid(k,l).ne.1) then
               m=k-ee_int(1,q)
               fftemp(k,l,q) = ff(m,n,q)
@@ -66,13 +71,9 @@ subroutine comp_equilibrium_BGK()
               edotu=dot2d(ee(:,q),ueq)
               usqr=dot2d(ueq,ueq)
               ffEq(k,l,q) = weight(q)*rho(k-1,l-1)*(1.+3.*edotu/(vunit**2) &
-                                       +(9./2.)*(edotu**2)/(vunit**4) &
-                                       -(3./2.)*usqr/(vunit**2) &
-               )
-               !write(*,*) ffEq(i,j,q), i,j,q
-               !write(*,*) '*********ueq*******'
-               !write(*,*) ueq
-               !write(*,*) '****************'
+                   +(9./2.)*(edotu**2)/(vunit**4) &
+                   -(3./2.)*usqr/(vunit**2) &
+                   )
            endif
         enddo
      enddo
@@ -80,20 +81,27 @@ subroutine comp_equilibrium_BGK()
 endsubroutine comp_equilibrium_BGK
 !***************************************************************
 subroutine collision()
-  integer :: q,k,l
+  integer :: q,k,l,p
+!
+! If a point is solid(1)   : do nothing
+!               surface(0) : bounce-back
+!               fluid(-1)  : collision  
+!  
   do q=1,qmom
      do l=2,Ny+1
         do k=2,Nx+1
-           if(is_solid(k,l).ne.1) then
+           select case (is_solid(k,l))
+           case(1)
+           case(0)
+              p=mirrorq(q)
+              ff(k,l,p)=fftemp(k,l,q) ! this is bounce-back
+           case(-1)
               ff(k,l,q) = fftemp(k,l,q) + (ffEq(k,l,q)-fftemp(k,l,q))/tau
-              !write(*,*) ff(i,j,q), i, j
-           endif
+           endselect
         enddo
      enddo
   enddo
-
-
-
+!
 endsubroutine collision
 !***************************************************************
 endmodule Evolve

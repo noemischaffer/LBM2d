@@ -20,19 +20,21 @@ module Cdata
   double precision,allocatable, dimension(:,:,:) :: ff,fftemp,ffEq
   integer, allocatable, dimension(:,:) :: is_solid
   logical::lffaloc=.false.
-  integer :: iTMAX
+  logical :: lstart=.true.
+  integer :: iTMAX=0
   integer, allocatable, dimension(:,:) :: surface
   double precision, allocatable, dimension(:,:,:,:) :: sigma
   double precision, allocatable, dimension(:,:) :: curl_uu
   double precision, allocatable, dimension(:) ::xx,yy
-integer, allocatable, dimension(:,:) :: refl_point
-integer :: Nlarge=1
-
-
+  integer :: Nts=0
+  integer :: ndiag=1
+  double precision, allocatable,dimension(:) :: ts_data
+  character(len=labellen), allocatable,dimension(:) :: ts_name
+!
   integer :: Nsurf
 !
 namelist /cdata_pars/ &
-     Nx,Ny,Lx,Ly,vunit,tau,iTMAX
+     Nx,Ny,Lx,Ly,vunit,tau,iTMAX,lstart,ndiag
 !
 contains
 !***********************!
@@ -43,22 +45,32 @@ subroutine rparam_cdata(unit,iostat)
   read(unit, NML=cdata_pars, IOSTAT=iostat)
   dx=Lx/dfloat(Nx-1)
   dy=Ly/dfloat(Ny-1)
-! the two lines above may change depending on
-! whether we are using PBC or not along a particular
-! direction
-Nlarge=Nx*Ny
-
+!----------------------
 endsubroutine rparam_cdata
 !***********************!
 subroutine allocate_cdata()
 integer :: i,j
-
+!---------------------------------------
+! The array is_solid is occupied in the following
+! manner. If it is  1  it is solid point
+!                   0  it is a boundary point
+!                   -1 it is a fluid point
+!---------------------------------------
 allocate(is_solid(Nx+2,Ny+2))
-is_solid=0
+!
+! first assume that all points are fluid
+! this array is overwritten when the obstacles are set
+is_solid=-1
 allocate(ff(Nx+2,Ny+2,qmom))
-ff=1.0d0
+ff=0.0d0
+ff(:,:,5) = 1.
+!
+! this sets that all momentum are zero
+! except the zero momentum which corresponds
+! to q = 5
+!
 allocate(fftemp(Nx+2,Ny+2,qmom))
-fftemp=1.0d0
+fftemp=0.0d0
 allocate(ffEq(Nx+2,Ny+2,qmom))
 ffEq=1.0d0
 allocate(xx(Nx))
@@ -82,20 +94,24 @@ endsubroutine free_cdata
 !***********************!
 subroutine set_model()
   integer :: q,i,j
+!-------------------------------------!
+
+!--------------------------------------------!
   q=1
-     do j=-1,1; do i=-1,1
-        ee_int(1,q)=i
-        ee_int(2,q)=j
-        ee(1,q) = real(i) 
-        ee(2,q) = real(j)
-        q=q+1
-     enddo; enddo
+  do j=-1,1; do i=-1,1
+     ee_int(1,q)=i
+     ee_int(2,q)=j
+     ee(1,q) = real(i) 
+     ee(2,q) = real(j)
+     q=q+1
+  enddo; enddo
   weight(1)=wcorner; weight(3)=wcorner; weight(7)=wcorner; weight(9)=wcorner
   weight(2)=wudlr ;  weight(4)=wudlr;   weight(6)=wudlr; weight(8)=wudlr
   weight(5)=wrest
   mirrorq(1)=9;mirrorq(2)=8;mirrorq(3)=7
   mirrorq(4)=6;mirrorq(5)=5;mirrorq(6)=4
   mirrorq(7)=3;mirrorq(8)=2;mirrorq(9)=1
+!---------------------------------------------!
 endsubroutine set_model
 !***********************!
 endmodule Cdata

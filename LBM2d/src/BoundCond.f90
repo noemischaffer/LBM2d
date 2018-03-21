@@ -11,14 +11,12 @@ use Avg
 use messages
 implicit none
 private
-public :: read_bc, initialize_bc, set_boundary_before,set_boundary_after
+public :: read_bc, initialize_bc, boundary_condition
 character (len=labellen) :: bc_left='periodic',bc_right='periodic'
 character (len=labellen) :: bc_bot='noslip',bc_top='noslip'
-character (len=labellen) :: bc_obstacle='none'
-
 ! It is left, right, bottom, top
 namelist /bc_pars/ &
-   bc_left,bc_right,bc_bot,bc_top,bc_obstacle
+   bc_left,bc_right,bc_bot,bc_top
 
 !***************************************************************
 contains
@@ -31,48 +29,15 @@ subroutine read_bc(unit,iostat)
 endsubroutine read_bc
 !***************************************************************
 subroutine initialize_bc()
-! Boundary types: rb, lb, tb, bb
-
-
-integer :: i,j
-
-  if (bc_left.eq.'periodic') then
-    if (bc_right.eq.'periodic') then
-      dx=Lx/Nx
-      do i=1, Nx
-        xx(i)=i*dx
-      enddo
-    else
-    call fatal_error('initialize_bc','bc left and right dont match')
-   endif 
-  endif
-  if (bc_bot.eq.'periodic') then
-    if (bc_top.eq.'periodic') then
-      dy=Ly/Ny
-      do j=1, Ny
-        yy(j)=j*dy
-      enddo
-    else
-    call fatal_error('initialize_bc','bc bot and top dont match')
-   endif 
-  endif
-
-endsubroutine initialize_bc
-!***************************************************************
-subroutine set_boundary_before()
-  integer,dimension(3) :: qq 
-
 !
 ! left boundary
 !
   select case(bc_left)
      case('periodic')
-      ff(Nx+2,:,:)=ff(2,:,:)
-      ff(1,:,:)=ff(Nx+1,:,:)
+        call pbcy
      case default
-       call fatal_error('boundary before','nothing other than pbc coded') 
+       call fatal_error('boundary condition','nothing other than pbc coded') 
   endselect
-
 !
 ! bc_right should go here once we have something
 ! other than pbc.
@@ -82,18 +47,15 @@ subroutine set_boundary_before()
      case default
        call fatal_error('boundary before','nothing other than pbc coded')
   endselect
-
-!
 !
 ! bottom boundary
 !
   select case(bc_bot)
   case('periodic')
-    ff(:,Ny+2,:)=ff(:,2,:)
-    ff(:,1,:)=ff(:,Ny+1,:)
+     call pbcx
   case('noslip')
-    qq=[1,2,3]
-    call noslipy_before(qq,1)
+     ff(:,1,:)=0.0d0
+     is_solid(:,1)=1
   case default
     call fatal_error('boundary before','bc not found')
   endselect
@@ -103,186 +65,180 @@ subroutine set_boundary_before()
   select case(bc_top)
     case('periodic')
     case('noslip')
-     qq=[7,8,9]
-     call noslipy_before(qq,Ny+2)
+       ff(:,Ny+2,:)=0.
+       is_solid(:,Ny+2)=1
   case default
     call fatal_error('boundary before','bc not found')
   endselect
 
-  select case(bc_obstacle)
-    case('none')
-    case('staircase')
-    call noslip_obstacle_before()
-  case default
-     call fatal_error('boundary obstacle','bc not found')
-  endselect
-
-endsubroutine set_boundary_before
+endsubroutine initialize_bc
 !***************************************************************
-subroutine noslipy_before(qarray,jy)
-  integer,dimension(3),intent(in) :: qarray
-  integer, intent(in) :: jy 
+subroutine pbcy()
+  ff(:,1,:)=ff(:,Ny+1,:)
+  is_solid(:,1)=is_solid(:,Ny+1)
+  ff(:,Ny+2,:)=ff(:,2,:)
+  is_solid(:,Ny+2)=is_solid(:,2)
+endsubroutine pbcy
+!***************************************************************
+subroutine pbcx()
+  ff(1,:,:)=ff(Nx+1,:,:)
+  is_solid(1,:)=is_solid(Nx+1,:)
+  ff(Nx+2,:,:)=ff(2,:,:)
+  is_solid(Nx+2,:)=is_solid(1,:)
+endsubroutine pbcx
+!***************************************************************
+subroutine boundary_condition()
   integer :: k,q,m,n,qnext,kq
-  k=1
-  do kq=1,2
-    q=qarray(kq)
-    m=k-ee_int(1,q)
-    n=jy-ee_int(2,q)
-    ff(k,jy,q)=ff(m,n,q)
-    !write(*,*) ff(i,jy,q), i, jy, q
-    !write(*,*) '****************'
-    !write(*,*) ff(m,n,q), m, n, q
-    !write(*,*) '*******new step********'
-  enddo
-  do k=2,Nx+1
-    do kq=1,3
-      q=qarray(kq)
-      m=k-ee_int(1,q)
-      n=jy-ee_int(2,q)
-      ff(k,jy,q)=ff(m,n,q)
-  !    write(*,*) ff(i,jy,q), i, jy, q
-  !    write(*,*) '****************'
-  !    write(*,*) ff(m,n,q), m, n, q
-  !    write(*,*) '*******new step********'
-    enddo
-  enddo
-  k=Nx+2
-  do kq=2,3
-    q=qarray(kq)
-    m=k-ee_int(1,q)
-    n=jy-ee_int(2,q)
-    ff(k,jy,q)=ff(m,n,q)
-    !write(*,*) ff(i,jy,q), i, jy, q
-    !write(*,*) '****************'
-    !write(*,*) ff(m,n,q), m, n, q
-    !write(*,*) '*******new step********'
-  enddo
-
-endsubroutine noslipy_before
-!***************************************************************
-subroutine noslip_obstacle_before()
-  integer :: k,l,q,m,n,jsurf
-
-open(unit=15, file='stream_to.txt', action='write', status='replace')
-open(unit=16, file='stream_from.txt', action='write', status='replace')
-
-
-  do q=1, qmom
-    do jsurf=1,Nsurf
-      k=surface(jsurf,1)
-      l=surface(jsurf,2)
-      m=k-ee_int(1,q)
-      n=l-ee_int(2,q)
-   !   if(is_solid(m,n).ne.1) then
-        ff(k,l,q)=ff(m,n,q)
-        write(15,*) k, ',', l
-        write(16,*) m, ',', n
-         !refl_point(Nsurf,q)=1
-         ! if(jsurf.eq.Nsurf-2) then
-         !  write(*,*) i,j,q, 'streamed', ff(m,n,q),  ' from', m, n,q
-         ! endif
-   !   endif
-     enddo
-   enddo
-
-close(15)
-close(16)
-
-endsubroutine noslip_obstacle_before
-!***************************************************************
-subroutine set_boundary_after()
-  integer,dimension(3) :: qq
-
+!
+  select case(bc_left)
+  case('periodic')
+     call pbcy
+  case default
+     call fatal_error('boundary condition','nothing other than pbc coded') 
+  endselect
+!
+! bc_right
+!
+  select case(bc_right)
+  case('periodic')
+  case default
+     call fatal_error('boundary before','nothing other than pbc coded')
+  endselect
 !
 ! bottom boundary
 !
   select case(bc_bot)
   case('periodic')
+     call pbcx
   case('noslip')
-    qq=[1,2,3]
-    call noslipy_after(qq,1)
+     call stream_bot()
   case default
-     call fatal_error('boundary after','bc not found')
+    call fatal_error('boundary before','bc not found')
   endselect
 !
 ! top boundary
 !
   select case(bc_top)
-  case('periodic')
-  case('noslip')
-    qq=[7,8,9]
-    call noslipy_after(qq,Ny+2)
+    case('periodic')
+    case('noslip')
+       call stream_top()
   case default
-    call fatal_error('boundary after','bc not found')
-  endselect
-
-  select case(bc_obstacle)
-    case('none')
-    case('staircase')
-      call noslip_obstacle_after()
-    case default
-      call fatal_error('obstacle boundary after','bc not found')
-  endselect
-endsubroutine set_boundary_after
+    call fatal_error('boundary before','bc not found')
+ endselect
+!
+endsubroutine boundary_condition
 !***************************************************************
-subroutine noslipy_after(qarray,jy)
-  integer,dimension(3),intent(in) :: qarray
-  integer, intent(in) :: jy
-  integer :: k,q,p,kq
-  k=1
-  do kq=1,2
-    q=qarray(kq)
-    p=mirrorq(q)
-    ff(k,jy,p)=ff(k,jy,q)
-    !write(*,*) ff(i,jy,p), i, jy, p
-    !write(*,*) '***************'
-    !write(*,*) ff(i,jy,q), i, jy, q
-    !write(*,*) '**********new step**********'
-  enddo
-  do k=2,Nx+1
-    do kq=1,3
-      q=qarray(kq)
-      p=mirrorq(q)
-      ff(k,jy,p)=ff(k,jy,q)
-   ! write(*,*) ff(i,jy,p), i, jy, p
-   ! write(*,*) '***************'
-   ! write(*,*) ff(i,jy,q), i, jy, q
-   ! write(*,*) '**********new step**********'
-    enddo
-  enddo
-  k=Nx+2
-  do kq=2,3
-    q=qarray(kq)
-    p=mirrorq(q)
-    ff(k,jy,p)=ff(k,jy,q)
-    !write(*,*) ff(i,jy,p), i, jy, p
-    !write(*,*) '***************'
-    !write(*,*) ff(i,jy,q), i, jy, q
-    !write(*,*) '**********new step**********'
-  enddo
-endsubroutine noslipy_after
-!***************************************************************
-subroutine noslip_obstacle_after()
-  integer :: k,l,q,p,jsurf
-
-  open(unit=10, file='bounce_back.txt', action='write', status='replace')
-   
-  do q=1,qmom 
-    do jsurf=1,Nsurf
-      k=surface(jsurf,1)
-      l=surface(jsurf,2)
-   !   if(refl_point(jsurf,q).eq.1) then
-         p=mirrorq(q)
-         ff(k,l,p)=ff(k,l,q)
-   !      if((q.eq.4).or.(q.eq.6)) then
-         !write(*,*) i, j, p, 'reflected from',  q
-   !      endif
-         write(10,*) k, ',', l
-   !   endif
+subroutine stream_bot()
+  integer :: k,l,q,m,n
+!
+! At the bottom boundary we should stream in (except at the two corners)
+! three components of momentum : 1,2,3  
+!
+  do q=1,3
+     l=1
+     n=l-ee_int(2,q)
+     do k=2,Nx+1
+        m=k-ee_int(1,q)
+        !
+        !stream only if the point you are
+        ! streaming from is a fluid point(-1)
+        !
+        if (is_solid(m,n).eq.-1) then
+           fftemp(k,l,q) = ff(m,n,q)
+        endif
      enddo
   enddo
-  close(10)
-endsubroutine noslip_obstacle_after
+!
+! For the left corner  
+!
+  do q=1,2
+     l=1
+     n=l-ee_int(2,q)
+     do k=2,Nx+1
+        m=k-ee_int(1,q)
+        !
+        !stream only if the point you are
+        ! streaming from is a fluid point(-1)
+        !
+        if (is_solid(m,n).eq.-1) then
+           fftemp(k,l,q) = ff(m,n,q)
+        endif
+     enddo
+  enddo
+!
+! For the right corner  
+!
+  do q=2,3
+     l=1
+     n=l-ee_int(2,q)
+     do k=2,Nx+1
+        m=k-ee_int(1,q)
+        !
+        !stream only if the point you are
+        ! streaming from is a fluid point(-1)
+        !
+        if (is_solid(m,n).eq.-1) then
+           fftemp(k,l,q) = ff(m,n,q)
+        endif
+     enddo
+  enddo
+endsubroutine stream_bot
+!***************************************************************
+subroutine stream_top()
+  integer :: k,l,q,m,n
+!
+! At the top boundary we should stream in (except at the two corners)
+! three components of momentum : 7,8,9  
+!
+  do q=7,9
+     l=Ny+2
+     n=l-ee_int(2,q)
+     do k=2,Nx+1
+        m=k-ee_int(1,q)
+        !
+        !stream only if the point you are
+        ! streaming from is a fluid point(-1)
+        !
+        if (is_solid(m,n).eq.-1) then
+           fftemp(k,l,q) = ff(m,n,q)
+        endif
+     enddo
+  enddo
+!
+! For the left corner  
+!
+  do q=7,8
+     l=Ny+2
+     n=l-ee_int(2,q)
+     do k=2,Nx+1
+        m=k-ee_int(1,q)
+        !
+        !stream only if the point you are
+        ! streaming from is a fluid point(-1)
+        !
+        if (is_solid(m,n).eq.-1) then
+           fftemp(k,l,q) = ff(m,n,q)
+        endif
+     enddo
+  enddo
+!
+! For the right corner  
+!
+  do q=8,9
+     l=Ny+2
+     n=l-ee_int(2,q)
+     do k=2,Nx+1
+        m=k-ee_int(1,q)
+        !
+        !stream only if the point you are
+        ! streaming from is a fluid point(-1)
+        !
+        if (is_solid(m,n).eq.-1) then
+           fftemp(k,l,q) = ff(m,n,q)
+        endif
+     enddo
+  enddo
+endsubroutine stream_top
 !***************************************************************
 endmodule BoundCond
 

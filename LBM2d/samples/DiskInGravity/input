@@ -1,0 +1,25 @@
+&cdata_pars
+  Nx=256
+  Ny=512
+  Lx=255
+  Ly=511
+  vunit=1.0
+  tau=5.0
+  iTMAX=100
+/
+&init_cond
+  init_type='static'
+  obstacle_type='circle'
+  center_x=120
+  center_y=120
+  radius=32
+/
+&bc_pars
+  bc_left='periodic'
+  bc_right='periodic'
+  bc_bot='periodic'
+  bc_top='periodic'
+/
+&force_pars
+  iforce='xgravity'
+  gm=0.002

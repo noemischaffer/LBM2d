@@ -6,6 +6,7 @@
   vunit=1.0
   tau=10.0
   iTMAX=80
+  ndiag=10
 /
 &init_cond
   init_type='static'

@@ -43,6 +43,7 @@ endsubroutine allocate_avg
 !***************************************************************
 subroutine calc_avg()
   integer :: q, k, l 
+  double precision :: uxmax,uymax
   uu=0.0d0;rho=0.0d0
   do q=1,qmom
     do l=2,Ny+1
@@ -60,12 +61,11 @@ subroutine calc_avg()
       enddo
     enddo
   enddo
-!  write(*,*) maxval(ff(:,:,:))
   uu(:,:,1)=uu(:,:,1)/rho(:,:)
   uu(:,:,2)=uu(:,:,2)/rho(:,:)
-
+!  write(*,*) maxval(ff(:,:,:))
 endsubroutine calc_avg
-!*************************************************************** 
+!***************************************************************
 subroutine vorticity()
 
 integer :: i,j,q,m,n
