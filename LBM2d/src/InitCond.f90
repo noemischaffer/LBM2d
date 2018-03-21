@@ -15,7 +15,6 @@ module InitCond
 use Cdata
 use Avg
 use messages
-use IO
 implicit none
 private
 public::read_param_init, initff,init_obstacle,construct_surface
@@ -35,7 +34,7 @@ namelist /init_cond/&
 contains
 !***************************************************************
 subroutine read_param_init(unit,iostat)
-!read the namelist init_cond
+!read the namelist init_con
   integer, intent(in) :: unit
   integer, intent(out) :: iostat
   read(unit, NML=init_cond, IOSTAT=iostat)
@@ -119,10 +118,6 @@ endselect
 ! Now construct the surface points
 !
 call construct_surface()
-!
-! and write down the is_solid array
-!
-call write_immersed_boundary(0)
 !
 endsubroutine init_obstacle
 !***************************************************************

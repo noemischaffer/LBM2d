@@ -6,7 +6,6 @@
 !***************************************************************
 module BoundCond
 use Cdata
-use InitCond
 use Avg
 use messages
 implicit none

@@ -48,6 +48,8 @@ if (lstart) then
    call initialize_bc()
    write(*,*) ' Then we set the immersed objects .....     '
    call init_obstacle()
+   write(*,*) 'and write down the is_solid array ...        '
+   call write_immersed_boundary(0)
    call boundary_condition()
    write(*,*) '... Initial set up is done.                  '
 else 
