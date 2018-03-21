@@ -125,7 +125,7 @@ subroutine construct_surface()
 !
 integer ::q,kk,m,n, k, l, l_up, l_down, k_left, k_right
 !
-write(*,*) 'constructing the surface points'
+!write(*,*) 'constructing the surface points'
 do l=2,Ny-1
    do k=2,Nx-1
       !
@@ -134,12 +134,12 @@ do l=2,Ny-1
       ! into a boundary point (0).
       !
       if(is_solid(k,l).eq.1) then
-         write(*,*) 'going over the solid points'
+        ! write(*,*) 'going over the solid points'
          do q=1,qmom
             m=k-ee_int(1,q)
             n=l-ee_int(2,q)
             if(is_solid(m,n).eq.-1) then
-               write(*,*) 'found a surface point'
+        !      write(*,*) 'found a surface point'
                is_solid(k,l) = 0
             endif
          enddo

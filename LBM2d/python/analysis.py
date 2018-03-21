@@ -67,19 +67,19 @@ def read_domain():
 #------------------------------------------------#
 def streamline():
   Nx,Ny,Lx,Ly,ux,uy,xx,yy=read_uu()
-  print Nx,Ny
-  print ux.shape,uy.shape
-  print xx.shape,yy.shape
-  plt.interactive(False)
+  print(Nx,Ny)
+  print(xx.shape,ux.shape)
+  print(xx.shape,yy.shape)
+# plt.interactive(False)
   plt.streamplot(yy,xx,ux,uy)
   plt.axis('equal')
   plt.show()
 #  plt.plot(xx[:,4],ux[:,4],'.-')
 #------------------------------------------------#
 if __name__ == '__main__':
-  print 'standalone routine'
+  print('standalone routine')
   #enkf(1,1)
 else:
-  print 'Importing analysis module'
+  print('Importing analysis module')
 #------------------------------------------------#
 

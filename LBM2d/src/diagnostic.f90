@@ -35,8 +35,8 @@ endsubroutine initialize_diag
 !***************************************************************
 subroutine calc_diag()
   if (iuxmax.eq.1) ts_data(iuxmax) = maxval(uu(:,:,1))
-  if (iuymax.eq.1) ts_data(iuymax) = maxval(uu(:,:,2))
-  if (iurms.eq.1) ts_data(iurms) = sqrt(sum(uu(:,:,1)*uu(:,:,1)+uu(:,:,2)*uu(:,:,2)))
+  if (iuymax.eq.2) ts_data(iuymax) = maxval(uu(:,:,2))
+  if (iurms.eq.3) ts_data(iurms) = sqrt(sum(uu(:,:,1)*uu(:,:,1)+uu(:,:,2)*uu(:,:,2)))
 endsubroutine calc_diag
 !***************************************************************
 endmodule Diagnostic

@@ -74,7 +74,7 @@ do it=1,jouter
      !  call update_surface()
      call boundary_condition()
   enddo
-  call calc_diag()
+  !call calc_diag()
   call write_ts(it*ndiag)
 enddo
 write(*,*) '......done'
@@ -82,6 +82,7 @@ write(*,*) '===writing the final snapshot ============'
 call write_snap(iTMAX)
 write(*,*) '=========================================='
 !call free_shear()
+call rwrite_density_uu()
 call free_avg()
 call free_cdata()
 endprogram lbm

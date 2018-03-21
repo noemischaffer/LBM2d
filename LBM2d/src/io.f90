@@ -50,7 +50,7 @@ subroutine write_input()
   inquire(FILE=datadir,EXIST=exists)
   if (exists) then
      write(*,*) 'simulation with:'
-     write(*,*) 'Nx=',Nx,'Ny=',Ny,'Lx=',Lx,'Ly=',Ly
+     write(*,*) 'Nx=',Nx,'Ny=',Ny,'Lx=',Lx,'Ly=',Ly,'dx=',dx,'dy=',dy
      write(*,*) 'unit of velocity, vunit=',vunit
      write(*,*) 'collision time scale tau=',tau
      write(*,*) 'Number of time steps, iTMAX=', iTMAX

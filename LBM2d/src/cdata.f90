@@ -34,7 +34,7 @@ module Cdata
   integer :: Nsurf
 !
 namelist /cdata_pars/ &
-     Nx,Ny,Lx,Ly,vunit,tau,iTMAX,lstart,ndiag
+     Nx,Ny,vunit,tau,iTMAX,lstart,ndiag
 !
 contains
 !***********************!
@@ -43,8 +43,8 @@ subroutine rparam_cdata(unit,iostat)
   integer, intent(in) :: unit
   integer, intent(out) :: iostat
   read(unit, NML=cdata_pars, IOSTAT=iostat)
-  dx=Lx/dfloat(Nx-1)
-  dy=Ly/dfloat(Ny-1)
+  Lx=dx*dfloat(Nx-1)
+  Ly=dy*dfloat(Ny-1)
 !----------------------
 endsubroutine rparam_cdata
 !***********************!
