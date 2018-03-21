@@ -126,8 +126,8 @@ subroutine construct_surface()
 integer ::q,kk,m,n, k, l, l_up, l_down, k_left, k_right
 !
 write(*,*) 'constructing the surface points'
-do k=2,Ny-1
-   do l=2,Nx-1
+do l=2,Ny-1
+   do k=2,Nx-1
       !
       ! we check if any neighbour of a solid point (1)
       ! is a fluid point (-1). The the solid point is turned
