@@ -51,6 +51,7 @@ if (lstart) then
    write(*,*) 'and write down the is_solid array ...        '
    call write_immersed_boundary(0)
    call boundary_condition()
+   call write_ts(0)
    write(*,*) '... Initial set up is done.                  '
 else 
    call fatal_error('LBM', 'restarting runs not set up')
@@ -61,19 +62,24 @@ call initialize_diag()
 jouter=iTMAX/ndiag
 do it=1,jouter
    do iin=1,ndiag
-     call calc_avg()
-     call stream()
+      call calc_avg()
+      call comp_equilibrium_BGK()
+      !write(*,*) 'before stream,it',it,ff(4,2,3),fftemp(4,2,7)
+      if (lstream) call stream()
+      call boundary_condition()
+      !write(*,*) 'after stream,it',it,ff(4,2,3),fftemp(4,2,7)
+      call collision()
+      !write(*,*) 'after collision,it',it,ff(4,2,3),ffEq(4,2,3)
      !  call vorticity()
      !  call rwrite_density_uu()
-     call comp_equilibrium_BGK()
-     call collision()
+
+     !write(*,*) 'after bb,it',it,ff(4,2,3),ff(5,1,7)
      !  call wall_shear()
      !  call update_surface()
-     call boundary_condition()
-  enddo
+   enddo
   !call calc_diag()
-  call calc_diag()
-  call write_ts(it*ndiag)
+   call calc_diag()
+   call write_ts(it*ndiag)
 enddo
 write(*,*) '......done'
 write(*,*) '===writing the final snapshot ============'

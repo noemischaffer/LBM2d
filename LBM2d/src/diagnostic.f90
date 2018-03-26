@@ -6,7 +6,7 @@ use messages
 implicit none
 private
 public :: initialize_diag,calc_diag, read_param_diag
-integer :: iuxmax=0,iuymax=0,iurms=0
+integer :: iuxmax=0,iuymax=0,iusqr=0
 namelist /diag/& 
      Nts
 !***************************************************************
@@ -27,19 +27,23 @@ subroutine initialize_diag()
   Nts=3
   allocate(ts_name(Nts))
   allocate(ts_data(Nts))
-  jdiag=0
-  iuxmax=jdiag+1; ts_name(iuxmax) = 'uxmax'; jdiag=jdiag+1 
-  iuymax=jdiag+1; ts_name(iuymax) = 'uymax'; jdiag=jdiag+1
-  iurms=jdiag+1;  ts_name(iurms) = 'urms'  ; jdiag=jdiag+1
+  jdiag=1
+  iuxmax=jdiag; ts_name(iuxmax) = 'uxmax'; jdiag=jdiag+1 
+  iuymax=jdiag; ts_name(iuymax) = 'uymax'; jdiag=jdiag+1
+  iusqr=jdiag;  ts_name(iusqr) = 'usqr'  ; jdiag=jdiag+1
 endsubroutine initialize_diag
 !***************************************************************
 subroutine calc_diag()
-  if (iuxmax.eq.1) ts_data(iuxmax) = maxval(uu(:,:,1))
-  if (iuymax.eq.2) ts_data(iuymax) = maxval(uu(:,:,2))
-  if (iurms.eq.3)  then 
-    ts_data(iurms) = sqrt(sum(uu(:,:,1)*uu(:,:,1)+uu(:,:,2)*uu(:,:,2)))
-    ts_data(iurms) = ts_data(iurms)/dfloat(Nx*Ny)
+  integer :: ix
+  if (iuxmax.ne.0) ts_data(iuxmax) = maxval(uu(:,:,1))
+  if (iuymax.ne.0) ts_data(iuymax) = maxval(uu(:,:,2))
+  if (iusqr.ne.0)  then 
+     ts_data(iusqr) = sum(uu(:,:,1)*uu(:,:,1)+uu(:,:,2)*uu(:,:,2))
+     ts_data(iusqr) = ts_data(iusqr)/dfloat(Nx*Ny)
   endif
+!  write(*,*) 'DM',uu(2:5,3,1)
+!  write(*,*) 'DM',uu(2:5,2,1)
+ 
 endsubroutine calc_diag
 !***************************************************************
 endmodule Diagnostic

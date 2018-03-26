@@ -42,14 +42,14 @@ subroutine get_ueq(uin,rhoin,ueq)
   double precision, intent(in) :: rhoin
   double precision,dimension(2), intent(out) :: ueq
   double precision, dimension(2) :: gg
-  gg(1)=gm
-  gg(2)=0.0d0
   select case (iforce)
   case('none')
      ueq=uin
   case('xgravity')
-!     ueq=uin+(tau*gg)/rhoin)
-     ueq=uin+((gg)/rhoin) !maybe this makes sense
+     gg(1)=gm
+     gg(2)=0.0d0
+     ueq=uin+(tau*gg)
+!     ueq=uin+(tau*(gg)/rhoin) !maybe this makes sense
   case default
      call fatal_error("force","iforce does not match")
   endselect

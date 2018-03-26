@@ -42,28 +42,20 @@ subroutine allocate_avg()
 endsubroutine allocate_avg
 !***************************************************************
 subroutine calc_avg()
-  integer :: q, k, l 
+  integer :: q 
   double precision :: uxmax,uymax
   uu=0.0d0;rho=0.0d0
+
   do q=1,qmom
-    do l=2,Ny+1
-      do k=2,Nx+1
-        if(is_solid(k,l).eq.1) then
-          uu(k-1,l-1,1)=0.0d0
-          uu(k-1,l-1,2)=0.0d0
-          rho(k-1,l-1)=1.0d0
-        else
-          uu(k-1,l-1,1) = uu(k-1,l-1,1)+vunit*ff(k,l,q)*dot2d(ee(:,q),xhat)
-          uu(k-1,l-1,2) = uu(k-1,l-1,2)+vunit*ff(k,l,q)*dot2d(ee(:,q),yhat)
-          rho(k-1,l-1) = rho(k-1,l-1)+ff(k,l,q)
-!          write(*,*) maxval(ff(:,:,:)), k, l
-        endif
-      enddo
-    enddo
+    rho = rho+ff(2:Nx+1,2:Ny+1,q)
   enddo
-  uu(:,:,1)=uu(:,:,1)/rho(:,:)
-  uu(:,:,2)=uu(:,:,2)/rho(:,:)
-!  write(*,*) maxval(ff(:,:,:))
+  uu(:,:,1) = (ff(2:Nx+1,2:Ny+1,3)+ff(2:Nx+1,2:Ny+1,6)+ff(2:Nx+1,2:Ny+1,9)&
+              -ff(2:Nx+1,2:Ny+1,1)-ff(2:Nx+1,2:Ny+1,4)-ff(2:Nx+1,2:Ny+1,7))
+  uu(:,:,2) = (ff(2:Nx+1,2:Ny+1,7)+ff(2:Nx+1,2:Ny+1,8)+ff(2:Nx+1,2:Ny+1,9)&
+              -ff(2:Nx+1,2:Ny+1,1)-ff(2:Nx+1,2:Ny+1,2)-ff(2:Nx+1,2:Ny+1,3))
+  uu(:,:,1) = vunit*uu(:,:,1)/rho(:,:)
+  uu(:,:,2) = vunit*uu(:,:,2)/rho(:,:)
+  !  write(*,*) maxval(ff(:,:,:))
 endsubroutine calc_avg
 !***************************************************************
 subroutine vorticity()

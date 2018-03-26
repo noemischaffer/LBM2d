@@ -21,6 +21,7 @@ module Cdata
   integer, allocatable, dimension(:,:) :: is_solid
   logical::lffaloc=.false.
   logical :: lstart=.true.
+  logical :: lstream=.true.
   integer :: iTMAX=0
   integer, allocatable, dimension(:,:) :: surface
   double precision, allocatable, dimension(:,:,:,:) :: sigma
@@ -34,7 +35,7 @@ module Cdata
   integer :: Nsurf
 !
 namelist /cdata_pars/ &
-     Nx,Ny,vunit,tau,iTMAX,lstart,ndiag
+     Nx,Ny,vunit,tau,iTMAX,lstart,ndiag,lstream
 !
 contains
 !***********************!
@@ -64,10 +65,6 @@ is_solid=-1
 allocate(ff(Nx+2,Ny+2,qmom))
 ff=0.0d0
 ff(:,:,5) = 1.
-!
-! this sets that all momentum are zero
-! except the zero momentum which corresponds
-! to q = 5
 !
 allocate(fftemp(Nx+2,Ny+2,qmom))
 fftemp=0.0d0

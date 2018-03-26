@@ -74,20 +74,16 @@ subroutine write_model_param()
   write(*,*) 'Writing model parameters to file:',trim(datadir),'/',trim(model_param_file)
   open(unit,FILE=trim(datadir)//'/'//trim(model_param_file),FORM='formatted')
   q=1
-  write(unit,*) comment_char,'----ee vectors ------'
+  norm=0.0d0
+  write(unit,*) comment_char,'--------q ---ee vectors ------ weights(q) -------- mirror(q)'
   do j=-1,1; do i=-1,1
-     write(unit,*) q,ee_int(1,q),ee_int(2,q)
-     write(unit,*) q,ee(1,q),ee(1,q)
+     write(unit,*) q,ee_int(1,q),ee_int(2,q),weight(q),mirrorq(q)
+!     write(unit,*) q,ee(1,q),ee(1,q)
+     norm=norm+weight(q)
      q=q+1
   enddo; enddo
-  write(unit,*) comment_char,'----weights, mirrorq --------'
-  norm=0.0d0
-  do q=1,qmom
-     write(unit,*)q,weight(q),mirrorq(q)
-     norm=norm+weight(q)
-  enddo
   write(*,*) 'checking self-consistnecy, sum of weights:', norm
-  write(unit,*) 'checking self-consistnecy, sum of weights:', norm
+  write(unit,*) comment_char,'checking self-consistnecy, sum of weights:', norm
   close(unit)
 !
 endsubroutine write_model_param
@@ -120,8 +116,8 @@ subroutine write_immersed_boundary(itime)
   write(*,*) 'writing is_solid array to file:'
   write(*,*) trim(datadir)//'/'//trim(is_solid_file)
   open(unit,FILE=trim(datadir)//'/'//trim(is_solid_file),FORM='formatted')
-  do iy=1,Ny
-     write(unit,*)(is_solid(ix,iy),ix=1,Nx)
+  do iy=1,Ny+2
+     write(unit,*)(is_solid(ix,iy),ix=1,Nx+2)
   enddo
   close(unit)
 endsubroutine write_immersed_boundary
@@ -132,7 +128,7 @@ subroutine write_ts(itime)
   integer :: its
   if (itime.eq.0) then
      write(*,*)'    it     ',(ts_name(its),its=1,Nts)
-     open(unit,FILE=trim(datadir)//'/'//trim(ts_file),FORM='formatted',status='new')
+     open(unit,FILE=trim(datadir)//'/'//trim(ts_file),FORM='formatted')
      write(unit,*) comment_char,'    it     ',(ts_name(its),its=1,Nts)
   close(unit)
   endif

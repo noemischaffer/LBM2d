@@ -28,12 +28,13 @@ subroutine read_bc(unit,iostat)
 endsubroutine read_bc
 !***************************************************************
 subroutine initialize_bc()
-!
+  integer :: q
+  !
 ! left boundary
 !
   select case(bc_left)
      case('periodic')
-        call pbcy
+        call pbcx
      case default
        call fatal_error('boundary condition','nothing other than pbc coded') 
   endselect
@@ -51,9 +52,11 @@ subroutine initialize_bc()
 !
   select case(bc_bot)
   case('periodic')
-     call pbcx
+     call pbcy
   case('noslip')
-     ff(:,1,:)=0.0d0
+     do q=1,qmom
+        ff(:,1,q)=weight(q)
+     enddo
      is_solid(:,1)=1
   case default
     call fatal_error('boundary before','bc not found')
@@ -64,7 +67,9 @@ subroutine initialize_bc()
   select case(bc_top)
     case('periodic')
     case('noslip')
-       ff(:,Ny+2,:)=0.
+       do q=1,qmom
+          ff(:,Ny+2,q)=weight(q)
+       enddo
        is_solid(:,Ny+2)=1
   case default
     call fatal_error('boundary before','bc not found')
@@ -83,15 +88,16 @@ subroutine pbcx()
   ff(1,:,:)=ff(Nx+1,:,:)
   is_solid(1,:)=is_solid(Nx+1,:)
   ff(Nx+2,:,:)=ff(2,:,:)
-  is_solid(Nx+2,:)=is_solid(1,:)
+  is_solid(Nx+2,:)=is_solid(2,:)
 endsubroutine pbcx
 !***************************************************************
 subroutine boundary_condition()
   integer :: k,q,m,n,qnext,kq
+  integer,dimension(3) :: qs
 !
   select case(bc_left)
   case('periodic')
-     call pbcy
+     call pbcx
   case default
      call fatal_error('boundary condition','nothing other than pbc coded') 
   endselect
@@ -108,9 +114,9 @@ subroutine boundary_condition()
 !
   select case(bc_bot)
   case('periodic')
-     call pbcx
+     call pbcy
   case('noslip')
-     call stream_bot()
+     call bounceback('bot')
   case default
     call fatal_error('boundary before','bc not found')
   endselect
@@ -120,124 +126,67 @@ subroutine boundary_condition()
   select case(bc_top)
     case('periodic')
     case('noslip')
-       call stream_top()
+       call bounceback('top')
   case default
     call fatal_error('boundary before','bc not found')
  endselect
 !
 endsubroutine boundary_condition
 !***************************************************************
-subroutine stream_bot()
-  integer :: k,l,q,m,n
+subroutine bounceback(boundary)
+  character(len=3),intent(in) :: boundary
+  integer :: q,m,n,ix,p,iq,iy
+  integer,dimension(3) :: threeqs
+
+  select case(boundary)
+  case('bot')
+     threeqs(1)=1
+     threeqs(2)=2
+     threeqs(3)=3
+     iy=1
+  case('top')
+     threeqs(1)=7
+     threeqs(2)=8
+     threeqs(3)=9
+     iy=Ny+2
+  endselect
 !
 ! At the bottom boundary we should stream in (except at the two corners)
 ! three components of momentum : 1,2,3  
 !
-  do q=1,3
-     l=1
-     n=l-ee_int(2,q)
-     do k=2,Nx+1
-        m=k-ee_int(1,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
+  do iq=1,3
+     q=threeqs(iq)
+     p=mirrorq(q)
+     do ix=2,Nx+1
+        n = iy - ee_int(2,q)
+        m = ix - ee_int(1,q)
         if (is_solid(m,n).eq.-1) then
-           fftemp(k,l,q) = ff(m,n,q)
+           ff(ix,iy,p) = ff(m,n,q)
+!           write(*,*) 'implementing bounce-back',ix,iy,m,n,q,ee_int(:,q)
         endif
      enddo
   enddo
 !
 ! For the left corner  
 !
-  do q=1,2
-     l=1
-     n=l-ee_int(2,q)
-     do k=2,Nx+1
-        m=k-ee_int(1,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-        if (is_solid(m,n).eq.-1) then
-           fftemp(k,l,q) = ff(m,n,q)
-        endif
-     enddo
-  enddo
+  q=threeqs(1)
+  p=mirrorq(q)
+  n=iy-ee_int(2,q)
+  m=1-ee_int(1,q)
+  if (is_solid(m,n).eq.-1) then
+     ff(1,iy,p) = ff(m,n,q)
+  endif
 !
 ! For the right corner  
 !
-  do q=2,3
-     l=1
-     n=l-ee_int(2,q)
-     do k=2,Nx+1
-        m=k-ee_int(1,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-        if (is_solid(m,n).eq.-1) then
-           fftemp(k,l,q) = ff(m,n,q)
-        endif
-     enddo
-  enddo
-endsubroutine stream_bot
-!***************************************************************
-subroutine stream_top()
-  integer :: k,l,q,m,n
-!
-! At the top boundary we should stream in (except at the two corners)
-! three components of momentum : 7,8,9  
-!
-  do q=7,9
-     l=Ny+2
-     n=l-ee_int(2,q)
-     do k=2,Nx+1
-        m=k-ee_int(1,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-        if (is_solid(m,n).eq.-1) then
-           fftemp(k,l,q) = ff(m,n,q)
-        endif
-     enddo
-  enddo
-!
-! For the left corner  
-!
-  do q=7,8
-     l=Ny+2
-     n=l-ee_int(2,q)
-     do k=2,Nx+1
-        m=k-ee_int(1,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-        if (is_solid(m,n).eq.-1) then
-           fftemp(k,l,q) = ff(m,n,q)
-        endif
-     enddo
-  enddo
-!
-! For the right corner  
-!
-  do q=8,9
-     l=Ny+2
-     n=l-ee_int(2,q)
-     do k=2,Nx+1
-        m=k-ee_int(1,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-        if (is_solid(m,n).eq.-1) then
-           fftemp(k,l,q) = ff(m,n,q)
-        endif
-     enddo
-  enddo
-endsubroutine stream_top
+  q=threeqs(3)
+  p=mirrorq(q)
+  n=iy-ee_int(2,q)
+  m=Nx+2-ee_int(1,q)
+  if (is_solid(m,n).eq.-1) then
+     ff(Nx+2,iy,p) = ff(m,n,q)
+  endif  
+endsubroutine bounceback
 !***************************************************************
 endmodule BoundCond
 

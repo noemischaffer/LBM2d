@@ -37,19 +37,19 @@ subroutine finalize_evolve()
 endsubroutine finalize_evolve
 !***************************************************************
 subroutine stream()
-  integer :: k,l,q,m,n
+  integer :: m,n,q,ix,iy
   do q=1,qmom
-     do l=2,Ny+1
-        n=l-ee_int(2,q)
-        do k=2,Nx+1
+     do iy=2,Ny+1
+        n=iy-ee_int(2,q)
+        do ix=2,Nx+1
            !
            ! I stream-in to all points which are not "solid"(1)
            ! which implies that I stream-in to surface points (0)
            ! too.
            !
-           if(is_solid(k,l).ne.1) then
-              m=k-ee_int(1,q)
-              fftemp(k,l,q) = ff(m,n,q)
+           if(is_solid(ix,iy).ne.1) then
+              m=ix-ee_int(1,q)
+              fftemp(ix,iy,q) = ff(m,n,q)
              ! write(*,*) fftemp(i,j,q), i, j, q, 'streamed from', iin, jin, q
            endif
         enddo
@@ -60,17 +60,19 @@ endsubroutine stream
 subroutine comp_equilibrium_BGK()
   use Avg
   use Force
-  integer :: q,k,l
+  integer :: q,ix,iy,ixm1,iym1
   double precision,dimension(2) :: ueq
   double precision :: edotu,usqr
   do q=1,qmom
-     do l=2,Ny+1
-        do k=2,Nx+1
-           if(is_solid(k,l).ne.1) then
-              call get_ueq(uu(k-1,l-1,:),rho(k-1,l-1),ueq)
+     do iy=2,Ny+1
+        iym1=iy-1
+        do ix=2,Nx+1
+           ixm1=ix-1
+           if(is_solid(ix,iy).eq.-1) then
+              call get_ueq(uu(ixm1,iym1,:),rho(ixm1,iym1),ueq)
               edotu=dot2d(ee(:,q),ueq)
               usqr=dot2d(ueq,ueq)
-              ffEq(k,l,q) = weight(q)*rho(k-1,l-1)*(1.+3.*edotu/(vunit) &
+              ffEq(ix,iy,q) = weight(q)*rho(ixm1,iym1)*(1.+3.*edotu/(vunit) &
                    +(9./2.)*(edotu**2)/(vunit**2) &
                    -(3./2.)*usqr/(vunit**2) & ! is there is misprint here in the book ?
                    )
@@ -81,22 +83,23 @@ subroutine comp_equilibrium_BGK()
 endsubroutine comp_equilibrium_BGK
 !***************************************************************
 subroutine collision()
-  integer :: q,k,l,p
+  integer :: q,ix,iy,p
 !
 ! If a point is solid(1)   : do nothing
 !               surface(0) : bounce-back
 !               fluid(-1)  : collision  
-!  
+! 
   do q=1,qmom
-     do l=2,Ny+1
-        do k=2,Nx+1
-           select case (is_solid(k,l))
+     do iy=2,Ny+1
+        do ix=2,Nx+1
+           select case (is_solid(ix,iy))
            case(1)
            case(0)
               p=mirrorq(q)
-              ff(k,l,p)=fftemp(k,l,q) ! this is bounce-back
+              ff(ix,iy,p)=fftemp(ix,iy,q) ! this is bounce-back
            case(-1)
-              ff(k,l,q) = fftemp(k,l,q) + (ffEq(k,l,q)-fftemp(k,l,q))/tau
+              ff(ix,iy,q) = fftemp(ix,iy,q) + (ffEq(ix,iy,q)-fftemp(ix,iy,q))/tau
+!              write(*,*) ix,iy,q,fftemp(ix,iy,q),ffEq(ix,iy,q),tau
            endselect
         enddo
      enddo
