@@ -51,25 +51,29 @@ if (lstart) then
    write(*,*) 'and write down the is_solid array ...        '
    call write_immersed_boundary(0)
    call boundary_condition()
+   call initialize_diag()
+   call calc_avg()
    call write_ts(0)
+   call write_snap(0)
    write(*,*) '... Initial set up is done.                  '
 else 
    call fatal_error('LBM', 'restarting runs not set up')
    write(*,*) '============================================'
 endif
 write(*,*) '=== Starting time stepping ================='
-call initialize_diag()
+
 jouter=iTMAX/ndiag
 do it=1,jouter
    do iin=1,ndiag
+     ! write(*,*) 'before stream,it',it,ff(4,2,3),ff(5,1,7),ff(4,2,7)
+      call boundary_condition()
+      if (lstream) call stream()
+      !write(*,*) 'after stream,it',it,ff(4,2,3),ff(5,1,7),ff(4,2,7)
+      !write(*,*) 'after BC,it',it,ff(4,2,3),ff(5,1,7),ff(4,2,7)
       call calc_avg()
       call comp_equilibrium_BGK()
-      !write(*,*) 'before stream,it',it,ff(4,2,3),fftemp(4,2,7)
-      if (lstream) call stream()
-      call boundary_condition()
-      !write(*,*) 'after stream,it',it,ff(4,2,3),fftemp(4,2,7)
       call collision()
-      !write(*,*) 'after collision,it',it,ff(4,2,3),ffEq(4,2,3)
+      !write(*,*) 'after collision,it',it,ff(4,2,3),ff(4,2,7)
      !  call vorticity()
      !  call rwrite_density_uu()
 

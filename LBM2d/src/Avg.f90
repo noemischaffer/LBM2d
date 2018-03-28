@@ -32,11 +32,11 @@ module Avg
 contains
 !***************************************************************
 subroutine allocate_avg()
-  allocate(uu(Nx,Ny,2))
+  allocate(uu(Nx+2,Ny+2,2))
   uu=0.0d0
-  allocate(rho(Nx,Ny))
+  allocate(rho(Nx+2,Ny+2))
   rho=0.0d0
-  allocate(curl_uu(Nx,Ny))
+  allocate(curl_uu(Nx+2,Ny+2))
   curl_uu=0.0d0
   lavg=.true.
 endsubroutine allocate_avg
@@ -47,14 +47,14 @@ subroutine calc_avg()
   uu=0.0d0;rho=0.0d0
 
   do q=1,qmom
-    rho = rho+ff(2:Nx+1,2:Ny+1,q)
+    rho(:,:) = rho(:,:)+ff(:,:,q)
   enddo
-  uu(:,:,1) = (ff(2:Nx+1,2:Ny+1,3)+ff(2:Nx+1,2:Ny+1,6)+ff(2:Nx+1,2:Ny+1,9)&
-              -ff(2:Nx+1,2:Ny+1,1)-ff(2:Nx+1,2:Ny+1,4)-ff(2:Nx+1,2:Ny+1,7))
-  uu(:,:,2) = (ff(2:Nx+1,2:Ny+1,7)+ff(2:Nx+1,2:Ny+1,8)+ff(2:Nx+1,2:Ny+1,9)&
-              -ff(2:Nx+1,2:Ny+1,1)-ff(2:Nx+1,2:Ny+1,2)-ff(2:Nx+1,2:Ny+1,3))
-  uu(:,:,1) = vunit*uu(:,:,1)/rho(:,:)
-  uu(:,:,2) = vunit*uu(:,:,2)/rho(:,:)
+  uu(:,:,1) = (ff(:,:,3)+ff(:,:,6)+ff(:,:,9)&
+              -ff(:,:,1)-ff(:,:,4)-ff(:,:,7))
+  uu(:,:,2) = (ff(:,:,7)+ff(:,:,8)+ff(:,:,9)&
+              -ff(:,:,1)-ff(:,:,2)-ff(:,:,3))
+  uu(:,:,1) = uu(:,:,1)/rho(:,:)
+  uu(:,:,2) = uu(:,:,2)/rho(:,:)
   !  write(*,*) maxval(ff(:,:,:))
 endsubroutine calc_avg
 !***************************************************************

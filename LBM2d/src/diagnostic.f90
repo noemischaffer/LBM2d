@@ -31,6 +31,9 @@ subroutine initialize_diag()
   iuxmax=jdiag; ts_name(iuxmax) = 'uxmax'; jdiag=jdiag+1 
   iuymax=jdiag; ts_name(iuymax) = 'uymax'; jdiag=jdiag+1
   iusqr=jdiag;  ts_name(iusqr) = 'usqr'  ; jdiag=jdiag+1
+!  write(*,*) 'iuxmax',iuxmax,ts_name(iuxmax)
+ ! write(*,*) 'iuymax',iuymax,ts_name(iuymax)
+  !write(*,*) 'iusqr',iusqr,ts_name(iusqr)
 endsubroutine initialize_diag
 !***************************************************************
 subroutine calc_diag()
@@ -38,7 +41,8 @@ subroutine calc_diag()
   if (iuxmax.ne.0) ts_data(iuxmax) = maxval(uu(:,:,1))
   if (iuymax.ne.0) ts_data(iuymax) = maxval(uu(:,:,2))
   if (iusqr.ne.0)  then 
-     ts_data(iusqr) = sum(uu(:,:,1)*uu(:,:,1)+uu(:,:,2)*uu(:,:,2))
+     ts_data(iusqr) = sum(uu(2:Nx+1,2:Ny+1,1)*uu(2:Nx+1,2:Ny+1,1)+&
+          uu(2:Nx+1,2:Ny+1,2)*uu(2:Nx+1,2:Ny+1,2))
      ts_data(iusqr) = ts_data(iusqr)/dfloat(Nx*Ny)
   endif
 !  write(*,*) 'DM',uu(2:5,3,1)

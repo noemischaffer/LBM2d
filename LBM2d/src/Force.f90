@@ -20,13 +20,14 @@ module Force
   use Messages
   use Cdata
   use Sub
+  use Avg
   implicit none
   private
-  public :: get_ueq, read_fpars
+  public :: get_uforced, read_fpars
   character (len=labellen) :: iforce='xgravity'
-  double precision :: famp=1.0d0, gm=0.001
+  double precision :: famp=1.0d0, gm=0.001,kf=1.0d0
   namelist /force_pars/ &
-     iforce,famp,gm
+     iforce,famp,gm,kf
 !***************************************************************
 contains
 !***************************************************************
@@ -37,22 +38,35 @@ subroutine read_fpars(unit,iostat)
   read(unit, NML=force_pars, IOSTAT=iostat)
 endsubroutine read_fpars
   !***************************************************************
-subroutine get_ueq(uin,rhoin,ueq)
-  double precision,dimension(2),intent(in) :: uin
-  double precision, intent(in) :: rhoin
-  double precision,dimension(2), intent(out) :: ueq
-  double precision, dimension(2) :: gg
+subroutine get_uforced(ii,jj,uf)
+  integer,intent(in) :: ii,jj
+  double precision,dimension(2) :: uin
+  double precision :: rhoin
+  double precision,dimension(2), intent(out) :: uf
+  double precision, dimension(2) :: gg,ff
+  uin=uu(ii,jj,:)
+  rhoin=rho(ii,jj)
   select case (iforce)
   case('none')
-     ueq=uin
+     uf=uin
   case('xgravity')
      gg(1)=gm
      gg(2)=0.0d0
-     ueq=uin+(tau*gg)
+     ff=gg*rhoin
 !     ueq=uin+(tau*(gg)/rhoin) !maybe this makes sense
+  case('kolmogorov_x')
+     ff(1)=famp*sin(2.0d0*d_pi*kf*yy(jj)/Ly)
+     ff(2)=0.
+  case('kolmogorov_y')
+     ff(1)=0.
+     ff(2)=famp*sin(2.0d0*d_pi*kf*xx(ii)/Lx)
   case default
      call fatal_error("force","iforce does not match")
   endselect
-endsubroutine get_ueq
+  uf=uin+(tau*ff/rhoin)
+!  if (jj .eq. Ny+1) then
+!     write(*,*) ii,jj,uf(1),uf(2),uin(1),uin(2)
+!  endif
+endsubroutine get_uforced
 !***************************************************************
 endmodule Force

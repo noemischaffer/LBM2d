@@ -131,7 +131,23 @@ subroutine boundary_condition()
     call fatal_error('boundary before','bc not found')
  endselect
 !
+! call immersed_boundary()
+!
 endsubroutine boundary_condition
+!***************************************************************
+subroutine immersed_boundary()
+  integer :: ix,iy,q,p
+  do q=1,qmom
+     do iy=2,Ny+1
+        do ix=2,Nx+1
+           if (is_solid(ix,iy).eq.0) then
+              p=mirrorq(q)
+              ff(ix,iy,p)=ff(ix,iy,q) ! this is bounce-back
+           endif
+        enddo
+     enddo
+  enddo
+endsubroutine immersed_boundary
 !***************************************************************
 subroutine bounceback(boundary)
   character(len=3),intent(in) :: boundary
@@ -160,10 +176,8 @@ subroutine bounceback(boundary)
      do ix=2,Nx+1
         n = iy - ee_int(2,q)
         m = ix - ee_int(1,q)
-        if (is_solid(m,n).eq.-1) then
-           ff(ix,iy,p) = ff(m,n,q)
+        ff(ix,iy,p) = ff(m,n,q)
 !           write(*,*) 'implementing bounce-back',ix,iy,m,n,q,ee_int(:,q)
-        endif
      enddo
   enddo
 !
@@ -173,9 +187,7 @@ subroutine bounceback(boundary)
   p=mirrorq(q)
   n=iy-ee_int(2,q)
   m=1-ee_int(1,q)
-  if (is_solid(m,n).eq.-1) then
-     ff(1,iy,p) = ff(m,n,q)
-  endif
+  ff(1,iy,p) = ff(m,n,q)
 !
 ! For the right corner  
 !
@@ -183,9 +195,8 @@ subroutine bounceback(boundary)
   p=mirrorq(q)
   n=iy-ee_int(2,q)
   m=Nx+2-ee_int(1,q)
-  if (is_solid(m,n).eq.-1) then
-     ff(Nx+2,iy,p) = ff(m,n,q)
-  endif  
+  ff(Nx+2,iy,p) = ff(m,n,q)
+!  
 endsubroutine bounceback
 !***************************************************************
 endmodule BoundCond

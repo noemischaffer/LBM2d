@@ -18,56 +18,59 @@ def get_input_param():
   Lx=float(Lxs)
   Lys=words[3]
   Ly=float(Lys)
-  vunits=words[4]
-  vunit=float(vunits)
-  taus=words[5]
+  taus=words[4]
   tau=float(taus)
-  iTmaxs=words[6]
+  iTmaxs=words[5]
   iTMAX=int(iTmaxs)
-  return Nx,Ny,Lx,Ly,vunit,tau,iTMAX
+  return Nx,Ny,Lx,Ly,tau,iTMAX
 #------------------------------------------------#
-def read_uu():
-  Nx,Ny,Lx,Ly,vunit,tau,iTMAX=get_input_param()
-  ux=np.zeros([Ny,Nx])
-  uy=np.zeros([Ny,Nx])
+def read_rho():
+  Nx,Ny,Lx,Ly,tau,iTMAX=get_input_param()
   xx=np.linspace(0,Lx,Nx)
   yy=np.linspace(0,Ly,Ny)
-#  xx=np.zeros([Nx,Ny])
-#  yy=np.zeros([Nx,Ny])
+  dx=1.
+  dy=1.
+  rho=np.loadtxt('data/rho_snap')
+  return Nx,Ny,Lx,Ly,xx,yy,rho
+#------------------------------------------------#
+def read_uu():
+  Nx,Ny,Lx,Ly,tau,iTMAX=get_input_param()
+  ux=np.zeros([Nx+1,Ny+1])
+  uy=np.zeros([Nx+1,Ny+1])
+  xx=np.linspace(0,Lx,Nx+1)
+  yy=np.linspace(0,Ly,Ny+1)
   dx=1.
   dy=1.
   uu=np.loadtxt('data/usnap')
   #print uu.shape
-  for iy in range(0,Ny):
+  for iy in range(0,Ny+1):
     #print iy
-    for ix in range(0,Nx):
-      ieven=2*ix
-      iodd=2*ix+1
+    for ix in range(0,Nx+1):
+      ieven=2*iy
+      iodd=2*iy+1
       #print ix,ieven,iodd
-      ux[iy,ix]=uu[iy,ieven]
-      uy[iy,ix]=uu[iy,iodd]
-#      xx[ix,iy]=ix*dx
-#      yy[ix,iy]=iy*dy
-#      ux[ix,iy]=xx[ix]*xx[ix]+yy[iy]
-#      uy[ix,iy]=xx[ix]-yy[iy]*yy[iy]
+      ux[ix,iy]=uu[ix,ieven]
+      uy[ix,iy]=uu[ix,iodd]
   return Nx,Ny,Lx,Ly,ux,uy,xx,yy
 #------------------------------------------------#
-def read_domain():
-  Nx,Ny,Lx,Ly,vunit,tau,iTMAX=get_input_param()
+def read_domain(lshow):
+  Nx,Ny,Lx,Ly,tau,iTMAX=get_input_param()
   solid=np.loadtxt('data/solid.now')
-  xx=np.linspace(0,Lx,Nx)
-  yy=np.linspace(0,Ly,Ny)
+  xx=np.linspace(0,Lx,Nx+1)
+  yy=np.linspace(0,Ly,Ny+1)
   plt.interactive(False)
   im=plt.imshow(solid,interpolation='none',cmap=cm.Greys)
   plt.axis('equal')
-  plt.show()
+  if lshow == 1 :
+    plt.show()
   return solid
 #------------------------------------------------#
 def streamline():
   Nx,Ny,Lx,Ly,ux,uy,xx,yy=read_uu()
+  plt.close()
   plt.interactive(False)
-  solid=read_domain()
-  plt.streamplot(xx,yy,ux,uy)
+  solid=read_domain(0)
+  plt.streamplot(xx,yy,np.transpose(ux),np.transpose(uy))
   plt.axis('tight')
   plt.axis('equal')
   plt.show()
@@ -76,9 +79,10 @@ def streamline():
 #------------------------------------------------#
 def pts():
   ts=np.loadtxt('data/ts')
+  plt.close()
   plt.interactive(False)
-  plt.plot(ts[:,0],ts[:,1]/ts[-1,1],'.')
-  plt.plot(ts[:,0],ts[:,2]/ts[-1,1],'s')
+  plt.plot(ts[:,0],ts[:,1],'.')
+  plt.plot(ts[:,0],ts[:,2],'s')
   plt.show()
   return ts
 #------------------------------------------------#

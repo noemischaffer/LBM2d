@@ -52,18 +52,30 @@ integer :: k,l,q
 !
 select case (init_type)
 case('static')
-   do q=1,qmom
-      do l=1,Ny+2
-         do k=1,Nx+2
-            ff(k,l,q) = weight(q)
-         enddo
-      enddo
-   enddo
+   call static()
 case default
         call fatal_error('initialize_ff',&
             'error in ff initialization! ')
 endselect
 endsubroutine initff
+!***************************************************************
+subroutine static()
+  use Evolve
+  integer :: ix,iy,q
+  double precision,dimension(2) :: uin
+  double precision :: rhoin,fEq
+  do q=1,qmom
+     do iy=1,Ny+1
+        do ix=1,Nx+2
+           uin(1)=0.0d0;uin(2)=0.0d0
+           rhoin=1.0d0
+           call get_feq(q,uin,rhoin,fEq)
+           ff(ix,iy,q)=fEq
+           fftemp(ix,iy,q)=fEq
+        enddo
+     enddo
+  enddo
+endsubroutine static
 !***************************************************************
 subroutine init_obstacle()
 
