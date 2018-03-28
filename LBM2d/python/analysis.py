@@ -35,22 +35,22 @@ def read_rho():
 #------------------------------------------------#
 def read_uu():
   Nx,Ny,Lx,Ly,tau,iTMAX=get_input_param()
-  ux=np.zeros([Nx+1,Ny+1])
-  uy=np.zeros([Nx+1,Ny+1])
+  ux=np.zeros([Ny+2,Nx+2])
+  uy=np.zeros([Ny+2,Nx+2])
   xx=np.linspace(0,Lx,Nx+1)
   yy=np.linspace(0,Ly,Ny+1)
   dx=1.
   dy=1.
   uu=np.loadtxt('data/usnap')
   #print uu.shape
-  for iy in range(0,Ny+1):
+  for iy in range(0,Ny+2):
     #print iy
-    for ix in range(0,Nx+1):
+    for ix in range(0,Nx+2):
       ieven=2*iy
       iodd=2*iy+1
       #print ix,ieven,iodd
-      ux[ix,iy]=uu[ix,ieven]
-      uy[ix,iy]=uu[ix,iodd]
+      ux[iy,ix]=uu[ix,ieven]
+      uy[iy,ix]=uu[ix,iodd]
   return Nx,Ny,Lx,Ly,ux,uy,xx,yy
 #------------------------------------------------#
 def read_domain(lshow):
@@ -77,6 +77,21 @@ def streamline():
   return ux,uy
 #  plt.plot(xx[:,4],ux[:,4],'.-')
 #------------------------------------------------#
+def puxuy():
+  Nx,Ny,Lx,Ly,ux,uy,xx,yy=read_uu()
+  plt.close()
+  plt.interactive(False)
+  plt.imshow(ux)
+  plt.title('ux')
+  plt.colorbar()
+  plt.show()
+  plt.figure(2)
+  plt.imshow(uy)
+  plt.title('uy')
+  plt.colorbar()
+  plt.show()
+  return ux,uy
+#------------------------------------------------#
 def pts():
   ts=np.loadtxt('data/ts')
   plt.close()
@@ -85,6 +100,20 @@ def pts():
   plt.plot(ts[:,0],ts[:,2],'s')
   plt.show()
   return ts
+#------------------------------------------------#
+def pjunk():
+  nx=2
+  ny=4
+  jeven=np.zeros([ny+2,nx+2])
+  jodd=np.zeros([ny+2,nx+2])
+  jj=np.loadtxt('junk')
+  for k in range(0,nx+2):
+    for l in range(0,ny+2):
+        leven=2*l
+        lodd=2*l+1
+        jeven[l,k]=jj[k,leven]
+        jodd[l,k]=jj[k,lodd]
+  return jeven,jodd,jj
 #------------------------------------------------#
 if __name__ == '__main__':
   print('standalone routine')

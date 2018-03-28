@@ -38,8 +38,8 @@ endsubroutine initialize_diag
 !***************************************************************
 subroutine calc_diag()
   integer :: ix
-  if (iuxmax.ne.0) ts_data(iuxmax) = maxval(uu(:,:,1))
-  if (iuymax.ne.0) ts_data(iuymax) = maxval(uu(:,:,2))
+  if (iuxmax.ne.0) ts_data(iuxmax) = maxval(uu(2:Nx+1,2:Ny+1,1))
+  if (iuymax.ne.0) ts_data(iuymax) = maxval(uu(2:Nx+1,2:Ny+1,2))
   if (iusqr.ne.0)  then 
      ts_data(iusqr) = sum(uu(2:Nx+1,2:Ny+1,1)*uu(2:Nx+1,2:Ny+1,1)+&
           uu(2:Nx+1,2:Ny+1,2)*uu(2:Nx+1,2:Ny+1,2))

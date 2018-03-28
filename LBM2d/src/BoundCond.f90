@@ -82,6 +82,7 @@ subroutine pbcy()
   is_solid(:,1)=is_solid(:,Ny+1)
   ff(:,Ny+2,:)=ff(:,2,:)
   is_solid(:,Ny+2)=is_solid(:,2)
+  write(*,*)'running pbcy'
 endsubroutine pbcy
 !***************************************************************
 subroutine pbcx()
@@ -89,6 +90,7 @@ subroutine pbcx()
   is_solid(1,:)=is_solid(Nx+1,:)
   ff(Nx+2,:,:)=ff(2,:,:)
   is_solid(Nx+2,:)=is_solid(2,:)
+  write(*,*)'running pbcx'
 endsubroutine pbcx
 !***************************************************************
 subroutine boundary_condition()
@@ -154,6 +156,7 @@ subroutine bounceback(boundary)
   integer :: q,m,n,ix,p,iq,iy
   integer,dimension(3) :: threeqs
 
+  
   select case(boundary)
   case('bot')
      threeqs(1)=1
@@ -183,19 +186,23 @@ subroutine bounceback(boundary)
 !
 ! For the left corner  
 !
-  q=threeqs(1)
-  p=mirrorq(q)
-  n=iy-ee_int(2,q)
-  m=1-ee_int(1,q)
-  ff(1,iy,p) = ff(m,n,q)
+  do iq=1,2
+     q=threeqs(iq)
+     p=mirrorq(q)
+     n=iy-ee_int(2,q)
+     m=1-ee_int(1,q)
+     ff(1,iy,p) = ff(m,n,q)
+  enddo
 !
 ! For the right corner  
 !
-  q=threeqs(3)
-  p=mirrorq(q)
-  n=iy-ee_int(2,q)
-  m=Nx+2-ee_int(1,q)
-  ff(Nx+2,iy,p) = ff(m,n,q)
+  do iq=2,3
+     q=threeqs(3)
+     p=mirrorq(q)
+     n=iy-ee_int(2,q)
+     m=Nx+2-ee_int(1,q)
+     ff(Nx+2,iy,p) = ff(m,n,q)
+  enddo
 !  
 endsubroutine bounceback
 !***************************************************************

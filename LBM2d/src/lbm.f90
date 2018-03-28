@@ -61,12 +61,13 @@ else
    write(*,*) '============================================'
 endif
 write(*,*) '=== Starting time stepping ================='
-
 jouter=iTMAX/ndiag
 do it=1,jouter
    do iin=1,ndiag
      ! write(*,*) 'before stream,it',it,ff(4,2,3),ff(5,1,7),ff(4,2,7)
+      write(*,*) 'before BC',it,ff(Nx+2,Ny/2,6),ff(2,Ny/2,6)
       call boundary_condition()
+      write(*,*) 'after BC',it,ff(Nx+2,Ny/2,6),ff(2,Ny/2,6)
       if (lstream) call stream()
       !write(*,*) 'after stream,it',it,ff(4,2,3),ff(5,1,7),ff(4,2,7)
       !write(*,*) 'after BC,it',it,ff(4,2,3),ff(5,1,7),ff(4,2,7)
