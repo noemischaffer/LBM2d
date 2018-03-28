@@ -1,8 +1,8 @@
 &cdata_pars
-  Nx=24
-  Ny=20
+  Nx=10
+  Ny=8
   tau=1.0
-  iTMAX=100
+  iTMAX=200
   ndiag=1
 /
 &init_cond
@@ -11,9 +11,9 @@
 &bc_pars
   bc_left='periodic'
   bc_right='periodic'
-  bc_bot='noslip'
-  bc_top='noslip'
+  bc_bot='periodic'
+  bc_top='periodic'
 /
 &force_pars
-  iforce='xgravity'
-  gm=0.001
+  iforce='kolmogorov_y'
+  famp=0.0002,kf=1.
