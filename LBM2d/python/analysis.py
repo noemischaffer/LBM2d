@@ -1,11 +1,12 @@
 #!/opt/local/bin/python2.7
 # Filename: analyse.py
+from scipy.io import FortranFile
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 #------------------------------------------------#
 def get_input_param():
-  inputf=open("data/input.param","r")
+  inputf=open("/home/noemi/Documents/LBM_Runs/DiskInGravity/data/input.param","r")
   data=inputf.readlines()
   for line in data:
     words=line.split()
@@ -33,16 +34,16 @@ def read_uu():
   yy=np.linspace(0,Ly,Ny)
 #  xx=np.zeros([Nx,Ny])
 #  yy=np.zeros([Nx,Ny])
+#  yy,xx=np.mgrid[1:Nx:64j, 1:Ny:64j]
   dx=Lx/(Nx-1)
   dy=Ly/(Ny-1)
-  uu=np.loadtxt('data/usnap')
-  #print uu.shape
+  uu=np.loadtxt('/home/noemi/Documents/LBM_Runs/DiskInGravity/data/usnap')
   for iy in range(0,Ny):
-    #print iy
+   #print iy
     for ix in range(0,Nx):
       ieven=2*ix
       iodd=2*ix+1
-      #print ix,ieven,iodd
+     #print ix,ieven,iodd
       ux[ix,iy]=uu[iy,ieven]
       uy[ix,iy]=uu[iy,iodd]
 #      xx[ix,iy]=ix*dx
@@ -53,7 +54,7 @@ def read_uu():
 #------------------------------------------------#
 def read_domain():
   Nx,Ny,Lx,Ly,vunit,tau,iTMAX=get_input_param()
-  solid=np.loadtxt('data/solid.now')
+  solid=np.loadtxt('/home/noemi/Documents/LBM_Runs/DiskInGravity/data/solid.now')
   xx=np.linspace(0,Lx,Nx)
   yy=np.linspace(0,Ly,Ny)
   plt.interactive(False)
@@ -67,11 +68,11 @@ def read_domain():
 #------------------------------------------------#
 def streamline():
   Nx,Ny,Lx,Ly,ux,uy,xx,yy=read_uu()
-  print(Nx,Ny)
-  print(xx.shape,ux.shape)
-  print(xx.shape,yy.shape)
+#  print(Nx,Ny)
+#  print(xx.shape,ux.shape)
+#  print(xx.shape,yy.shape)
 # plt.interactive(False)
-  plt.streamplot(yy,xx,ux,uy)
+  plt.streamplot(xx,yy,np.transpose(ux),np.transpose(uy))
   plt.axis('equal')
   plt.show()
 #  plt.plot(xx[:,4],ux[:,4],'.-')

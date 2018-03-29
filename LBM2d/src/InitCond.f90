@@ -55,11 +55,7 @@ case('static')
    do q=1,qmom
       do l=2,Ny+1
          do k=2,Nx+1
-            if(q.eq.5) then
-               ff(k,l,q) = 1.0d0
-            else
-               ff(k,l,q) = 0.0d0
-            endif
+           ff(k,l,q) = weight(q)
          enddo
       enddo
    enddo
@@ -87,8 +83,8 @@ case('circle')
       do k=2,Nx+1
          if(((xx(k-1)-center_x)**2 + (yy(l-1)-center_y)**2) .le. radius**2) then
             is_solid(k,l)=1 ! this is a solid point
-            ff(k,l,:)=0.0d0
-            ff(k,l,5)=1.0d0
+!           ff(k,l,:)=0.0d0
+!            ff(k,l,5)=1.0d0
          endif
       enddo
    enddo
@@ -105,8 +101,8 @@ case('rectangle')
               (point_rb_y-point_lb_y)*(point_rb_y-point_lb_y)
          if((0.lt.AMdotAB).and.(AMdotAB.lt.ABdotAB).and.(0.lt.AMdotAD).and.(AMdotAD.lt.ADdotAD)) then
             is_solid(k,l)=1
-            ff(k,l,:)=0.0d0
-            ff(k,l,5)=1.0d0
+!            ff(k,l,:)=0.0d0
+!            ff(k,l,5)=1.0d0
          endif
       enddo
    enddo
@@ -147,6 +143,24 @@ do l=2,Ny-1
    enddo
 enddo
 !
+
+open(unit=12, file='fluid_point.txt', action='write', status='replace')
+open(unit=13, file='surface_point.txt', action='write', status='replace')
+open(unit=14, file='solid_point.txt', action='write', status='replace')
+do l=2,Ny-1
+  do k=2, Nx-1
+    if(is_solid(k,l).eq.-1) then
+      write(12,*) k, ',', l
+    endif 
+    if(is_solid(k,l).eq.0) then
+      write(13,*) k, ',', l
+    endif 
+    if(is_solid(k,l).eq.1) then
+      write(14,*) k, ',', l
+    endif 
+  enddo
+enddo
+
 endsubroutine construct_surface
 !***************************************************************
 endmodule InitCond

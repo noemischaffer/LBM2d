@@ -57,29 +57,57 @@ subroutine stream()
   enddo
 endsubroutine stream
 !***************************************************************
+!subroutine comp_equilibrium_BGK()
+!  use Avg
+!  use Force
+!  integer :: q,k,l
+!  double precision,dimension(2) :: ueq
+!  double precision :: edotu,usqr
+!  do q=1,qmom
+!     do l=2,Ny+1
+!        do k=2,Nx+1
+!           if(is_solid(k,l).ne.1) then
+!              call get_ueq(uu(k-1,l-1,:),rho(k-1,l-1),ueq)
+!              edotu=dot2d(ee(:,q),ueq)
+!              usqr=dot2d(ueq,ueq)
+!              ffEq(k,l,q) = weight(q)*rho(k-1,l-1)*(1.0d0+3.0d0*edotu/(vunit) &
+!                   +(9.0d0/2.0d0)*(edotu**2.0d0)/(vunit**4.0d0) &
+!                   -(3.0d0/2.0d0)*usqr/(vunit**2.0d0) &
+!                    )
+!           endif
+!        enddo
+!     enddo
+!  enddo 
+
+!endsubroutine comp_equilibrium_BGK
+!***************************************************************
 subroutine comp_equilibrium_BGK()
   use Avg
   use Force
-  integer :: q,k,l
-  double precision,dimension(2) :: ueq
-  double precision :: edotu,usqr
+  integer :: q,kk,ll
+  double precision,dimension(2) :: uforced
+  double precision :: uxy, usqr
+
+
   do q=1,qmom
-     do l=2,Ny+1
-        do k=2,Nx+1
-           if(is_solid(k,l).ne.1) then
-              call get_ueq(uu(k-1,l-1,:),rho(k-1,l-1),ueq)
-              edotu=dot2d(ee(:,q),ueq)
-              usqr=dot2d(ueq,ueq)
-              ffEq(k,l,q) = weight(q)*rho(k-1,l-1)*(1.+3.*edotu/(vunit**2) &
-                   +(9./2.)*(edotu**2)/(vunit**4) &
-                   -(3./2.)*usqr/(vunit**2) &
+    do ll=2,Ny+1
+       do kk=2,Nx+1
+          if(is_solid(kk,ll).eq.-1) then
+             call get_uforce(kk,ll,uforced)
+             uxy=uforced(1)*ee(1,q)+uforced(2)*ee(2,q)
+             usqr=uforced(1)*uforced(1)+uforced(2)*uforced(2)
+             ffEq(kk,ll,q) = weight(q)*rho(kk,ll)*(1.0d0+3.0d0*uxy/(vunit) &
+                  +(9.0d0/2.0d0)*(uxy**2)/(vunit**2) &
+                  -(3.0d0/2.0d0)*usqr/(vunit**2) &
                    )
-           endif
-        enddo
-     enddo
+          endif
+       enddo
+    enddo
   enddo
+
 endsubroutine comp_equilibrium_BGK
 !***************************************************************
+!
 subroutine collision()
   integer :: q,k,l,p
 !
@@ -101,6 +129,7 @@ subroutine collision()
         enddo
      enddo
   enddo
+
 !
 endsubroutine collision
 !***************************************************************

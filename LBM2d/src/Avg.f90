@@ -32,57 +32,83 @@ module Avg
 contains
 !***************************************************************
 subroutine allocate_avg()
-  allocate(uu(Nx,Ny,2))
+  allocate(uu(Nx+2,Ny+2,2))
   uu=0.0d0
-  allocate(rho(Nx,Ny))
+  allocate(rho(Nx+2,Ny+2))
   rho=0.0d0
-  allocate(curl_uu(Nx,Ny))
+  allocate(curl_uu(Nx+2,Ny+2))
   curl_uu=0.0d0
   lavg=.true.
 endsubroutine allocate_avg
 !***************************************************************
-subroutine calc_avg()
-  integer :: q, k, l 
-  double precision :: uxmax,uymax
-  uu=0.0d0;rho=0.0d0
-  do q=1,qmom
-    do l=2,Ny+1
-      do k=2,Nx+1
-        if(is_solid(k,l).eq.1) then
-          uu(k-1,l-1,1)=0.0d0
-          uu(k-1,l-1,2)=0.0d0
-          rho(k-1,l-1)=1.0d0
-        else
-          uu(k-1,l-1,1) = uu(k-1,l-1,1)+vunit*ff(k,l,q)*dot2d(ee(:,q),xhat)
-          uu(k-1,l-1,2) = uu(k-1,l-1,2)+vunit*ff(k,l,q)*dot2d(ee(:,q),yhat)
-          rho(k-1,l-1) = rho(k-1,l-1)+ff(k,l,q)
-!          write(*,*) maxval(ff(:,:,:)), k, l
-        endif
-      enddo
-    enddo
-  enddo
-  uu(:,:,1)=uu(:,:,1)/rho(:,:)
-  uu(:,:,2)=uu(:,:,2)/rho(:,:)
+!subroutine calc_avg()
+!  integer :: q, k, l 
+!  double precision :: uxmax,uymax
+!  uu=0.0d0;rho=0.0d0
+!  do q=1,qmom
+!    do l=2,Ny+1
+!      do k=2,Nx+1
+!        if(is_solid(k,l).eq.1) then
+!          uu(k-1,l-1,1)=0.0d0
+!          uu(k-1,l-1,2)=0.0d0
+!          rho(k-1,l-1)=1.0d0
+!        else
+!          uu(k-1,l-1,1) = uu(k-1,l-1,1)+vunit*ff(k,l,q)*dot2d(ee(:,q),xhat)
+!          uu(k-1,l-1,2) = uu(k-1,l-1,2)+vunit*ff(k,l,q)*dot2d(ee(:,q),yhat)
+!          rho(k-1,l-1) = rho(k-1,l-1)+ff(k,l,q)
+!        endif
+!      enddo
+!    enddo
+!  enddo
+!  uu(:,:,1)=uu(:,:,1)/rho(:,:)
+!  uu(:,:,2)=uu(:,:,2)/rho(:,:)
 !  write(*,*) maxval(ff(:,:,:))
+!write(*,*) maxval(rho(:,:)), 'max rho'
+!endsubroutine calc_avg
+!***************************************************************
+subroutine calc_avg()
+  integer :: q,i,j
+  double precision :: uxmax,uymax
+  uu=0.00d0;rho=0.0d0
+  uu(:,:,1) = ff(:,:,3)+ff(:,:,6)+ff(:,:,9)-(ff(:,:,1) &
+                    + ff(:,:,4)+ff(:,:,7))
+  uu(:,:,2) = ff(:,:,7)+ff(:,:,8)+ff(:,:,9)-(ff(:,:,1) &
+                     + ff(:,:,2)+ff(:,:,3))
+  
+   do q=1,qmom
+     rho = rho+ff(:,:,q)
+     !do j=1,Ny+2
+     !  do i=1,Nx+2
+     !    if(is_solid(i,j).eq.1) then
+     !     uu(i,j,1)=0.0d0
+     !     uu(i,j,2)=0.0d0
+     !     rho(i,j)=1.0d0
+     !    endif
+     ! enddo
+     !enddo
+  enddo
+  uu(:,:,1)=vunit*uu(:,:,1)/rho(:,:)
+  uu(:,:,2)=vunit*uu(:,:,2)/rho(:,:)
 endsubroutine calc_avg
 !***************************************************************
+
 subroutine vorticity()
 
-integer :: i,j,q,m,n
+integer :: k,l,q,m,n
   curl_uu=0.0d0
-  do j=2,Ny-1
-    do i=2, Nx-1
-      if(is_solid(i,j).eq.1) then
-        curl_uu(i,j)=0.0d0
+  do l=2,Ny+1
+    do k=2,Nx+1
+      if(is_solid(k,l).eq.1) then
+        curl_uu(k,l)=0.0d0
         do q=1,qmom
-          m=i-ee_int(1,q)
-          n=j-ee_int(2,q)
+          m=k-ee_int(1,q)
+          n=l-ee_int(2,q)
           if(is_solid(m,n).eq.1) then
              curl_uu(m,n)=0.0d0
           endif
         enddo 
       else
-         curl_uu(i,j) = (uu(i+1,j,2)-uu(i-1,j,2))/(2.0d0*dx) - (uu(i,j+1,1)-uu(i,j-1,1))/(2.0d0*dy)
+         curl_uu(k,l) = (uu(k+1,l,2)-uu(k-1,l,2))/(2.0d0*dx) - (uu(k,l+1,1)-uu(k,l-1,1))/(2.0d0*dy)
      endif
     enddo
   enddo
@@ -136,10 +162,10 @@ subroutine rwrite_density_uu()
   !write(*,*) maxval(uu(:,:,1)),maxval(uu(:,:,2))
   close(11)
 
-  open(unit=12, file='velocity_math_vx.txt', action='write', status='replace')
+  open(unit=12, file='velocity_math_vx.dat', action='write', status='replace')
   write(12,*) uu(:,:,1)
   close(12)
-  open(unit=13, file='velocity_math_vy.txt', action='write', status='replace')
+  open(unit=13, file='velocity_math_vy.dat', action='write', status='replace')
   write(13,*) uu(:,:,2)
   close(13)
 

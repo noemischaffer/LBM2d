@@ -59,29 +59,21 @@ endif
 write(*,*) '=== Starting time stepping ================='
 call initialize_diag()
 call write_ts(0)
-jouter=iTMAX/ndiag
-do it=1,jouter
-   do iin=1,ndiag
-     call stream()
-     call calc_avg()
-     call calc_diag()
-     call write_ts(it)
-     !  call vorticity()
-     !  call rwrite_density_uu()
-     call comp_equilibrium_BGK()
-     call collision()
-     !  call wall_shear()
-     !  call update_surface()
-     call boundary_condition()
-  enddo
-  !call calc_diag()
-  call write_ts(it*ndiag)
+do it=1,iTMAX
+  call calc_avg()
+  call comp_equilibrium_BGK()
+!  call collision()
+  call stream()
+  call boundary_condition()
+  call collision()
+!  call calc_avg()
+  call calc_diag()
+  call write_ts(it)
 enddo
 write(*,*) '......done'
 write(*,*) '===writing the final snapshot ============'
 call write_snap(iTMAX)
 write(*,*) '=========================================='
-!call free_shear()
 call rwrite_density_uu()
 call free_avg()
 call free_cdata()

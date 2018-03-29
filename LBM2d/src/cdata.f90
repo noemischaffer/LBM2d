@@ -43,8 +43,6 @@ subroutine rparam_cdata(unit,iostat)
   integer, intent(in) :: unit
   integer, intent(out) :: iostat
   read(unit, NML=cdata_pars, IOSTAT=iostat)
-  Lx=dx*dfloat(Nx-1)
-  Ly=dy*dfloat(Ny-1)
 !----------------------
 endsubroutine rparam_cdata
 !***********************!
@@ -63,22 +61,24 @@ allocate(is_solid(Nx+2,Ny+2))
 is_solid=-1
 allocate(ff(Nx+2,Ny+2,qmom))
 ff=0.0d0
-ff(:,:,5) = 1.
+ff(:,:,5) = 1.0d0
 !
 ! this sets that all momentum are zero
 ! except the zero momentum which corresponds
 ! to q = 5
 !
+Lx=dx*dfloat(Nx)
+Ly=dy*dfloat(Ny)
 allocate(fftemp(Nx+2,Ny+2,qmom))
 fftemp=0.0d0
 allocate(ffEq(Nx+2,Ny+2,qmom))
 ffEq=1.0d0
-allocate(xx(Nx))
-do i=1, Nx
+allocate(xx(Nx+2))
+do i=1, Nx+2
   xx(i)=i*dx
 enddo
-allocate(yy(Ny))
-do j=1, Ny
+allocate(yy(Ny+2))
+do j=1, Ny+2
   yy(j)=j*dy
 enddo
 lffaloc=.true.
