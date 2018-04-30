@@ -14,9 +14,10 @@ module Cdata
   double precision, dimension(2,qmom) :: ee ! unit vectors of the lattice
   integer, dimension(2,qmom) :: ee_int ! integer unit vectors of the lattice  
   double precision,dimension(2) :: xhat=[1.0d0,0.0d0],yhat=[0.0d0,1.0d0]
-  double precision :: vunit=1.0d0,tau=1.0d0
-  double precision :: Lx=2.0d0*d_pi,Ly=2.0d0*d_pi
+  double precision :: tau=1.0d0, vunit=1.0d0
+  double precision :: Lx,Ly
   double precision :: dx=1.0d0,dy=1.0d0
+  double precision :: Re=10.0d0
   double precision,allocatable, dimension(:,:,:) :: ff,fftemp,ffEq
   integer, allocatable, dimension(:,:) :: is_solid
   logical::lffaloc=.false.
@@ -30,11 +31,11 @@ module Cdata
   integer :: ndiag=1
   double precision, allocatable,dimension(:) :: ts_data
   character(len=labellen), allocatable,dimension(:) :: ts_name
-!
+  integer :: Nlarge = 1
   integer :: Nsurf
 !
 namelist /cdata_pars/ &
-     Nx,Ny,vunit,tau,iTMAX,lstart,ndiag
+     Nx,Ny,tau,iTMAX,lstart,ndiag,Re
 !
 contains
 !***********************!
@@ -43,6 +44,7 @@ subroutine rparam_cdata(unit,iostat)
   integer, intent(in) :: unit
   integer, intent(out) :: iostat
   read(unit, NML=cdata_pars, IOSTAT=iostat)
+  Nlarge=Nx*Ny
 !----------------------
 endsubroutine rparam_cdata
 !***********************!
@@ -67,19 +69,19 @@ ff(:,:,5) = 1.0d0
 ! except the zero momentum which corresponds
 ! to q = 5
 !
+allocate(fftemp(Nx+2,Ny+2,qmom))
+fftemp=ff
+allocate(ffEq(Nx+2,Ny+2,qmom))
+ffEq=ff
 Lx=dx*dfloat(Nx)
 Ly=dy*dfloat(Ny)
-allocate(fftemp(Nx+2,Ny+2,qmom))
-fftemp=0.0d0
-allocate(ffEq(Nx+2,Ny+2,qmom))
-ffEq=1.0d0
 allocate(xx(Nx+2))
 do i=1, Nx+2
-  xx(i)=i*dx
+  xx(i)=(i+1)*dx
 enddo
 allocate(yy(Ny+2))
 do j=1, Ny+2
-  yy(j)=j*dy
+  yy(j)=(j+1)*dy
 enddo
 lffaloc=.true.
 endsubroutine allocate_cdata
@@ -101,8 +103,8 @@ subroutine set_model()
   do j=-1,1; do i=-1,1
      ee_int(1,q)=i
      ee_int(2,q)=j
-     ee(1,q) = real(i) 
-     ee(2,q) = real(j)
+     ee(1,q) = dfloat(ee_int(1,q)) 
+     ee(2,q) = dfloat(ee_int(2,q))
      q=q+1
   enddo; enddo
   weight(1)=wcorner; weight(3)=wcorner; weight(7)=wcorner; weight(9)=wcorner

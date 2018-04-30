@@ -24,8 +24,8 @@ module Force
   implicit none
   private
   public :: get_uforce, read_fpars
-  character (len=labellen) :: iforce='xgravity'
-  double precision :: famp=1.0d0,gm=0.001d0,kk=1.0d0
+  character (len=labellen) :: iforce='none'
+  double precision :: famp=0.0d0,gm=0.0d0,kk=0.0d0
   namelist /force_pars/ &
      iforce,famp,gm,kk
 !***************************************************************
@@ -57,6 +57,9 @@ subroutine get_uforce(ii,jj,uout)
   case('kolmogorov_x')
     force(1)=famp*sin(2.0d0*d_pi*kk*yy(jj)/Ly)
     force(2)=0.0d0
+  case('kolmogorov_y')
+    force(1)=0.0d0
+    force(2)=famp*sin(2.0d0*d_pi*kk*xx(ii)/Lx)
   case default
      call fatal_error("force","iforce does not match")
   endselect

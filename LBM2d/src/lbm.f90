@@ -13,7 +13,7 @@ use InitCond
 use ShearStress
 !---------------------!
 implicit none
-integer :: it,jouter,iin
+integer :: it,jouter,iin,k,l
 character (len=25) :: filename
 !---------------------!
 write(*,*) '***************************************'
@@ -22,6 +22,7 @@ write(*,*) '***************************************'
 write(*,*) '========= Reading input data ...======='
 call read_input()
 write(*,*) ' done....'
+call allocate_cdata()
 call write_input()
 write(*,*) '============================================'
 write(*,*) '                Model D2Q9                  '
@@ -31,11 +32,10 @@ call write_model_param()
 write(*,*) '.....done '
 write(*,*) '============================================'
 write(*,*) '============Allocating large arrays========='
-call allocate_cdata()
 call allocate_avg()
+call allocate_shear()
 write(*,*) '..done.'
 write(*,*) '============================================'
-!call allocate_shear()
 !
 ! If we start from scratch then we implement initial condition
 ! otherwise we read the data from a file.
@@ -48,33 +48,45 @@ if (lstart) then
    call initialize_bc()
    write(*,*) ' Then we set the immersed objects .....     '
    call init_obstacle()
+   call construct_surface()
+!   call wall_shear()
    write(*,*) 'and write down the is_solid array ...        '
    call write_immersed_boundary(0)
    call boundary_condition()
+   call initialize_diag()
+   call calc_avg()
+   call write_ts(0)
+   call write_snap(0)
    write(*,*) '... Initial set up is done.                  '
 else 
    call fatal_error('LBM', 'restarting runs not set up')
    write(*,*) '============================================'
 endif
 write(*,*) '=== Starting time stepping ================='
-call initialize_diag()
-call write_ts(0)
 do it=1,iTMAX
+  call boundary_condition()
+  call stream()
   call calc_avg()
   call comp_equilibrium_BGK()
-!  call collision()
-  call stream()
-  call boundary_condition()
   call collision()
-!  call calc_avg()
+  call update_surface()
+!  call wall_shear()
   call calc_diag()
   call write_ts(it)
+  if (mod(it,1) .eq. 0) then
+    WRITE (filename, '(a,I5.5,a)') 'density_series',it,'.dat'
+    open(unit=10, file=filename, action='write', status='replace')
+     do k=1, Nx+2
+       write(10,*) (ff(k,l,3), l=1,Ny+2)
+     enddo
+    close(10)
+  endif
 enddo
 write(*,*) '......done'
 write(*,*) '===writing the final snapshot ============'
 call write_snap(iTMAX)
-write(*,*) '=========================================='
 call rwrite_density_uu()
+write(*,*) '=========================================='
 call free_avg()
 call free_cdata()
 endprogram lbm

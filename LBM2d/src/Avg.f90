@@ -46,16 +46,16 @@ endsubroutine allocate_avg
 !  double precision :: uxmax,uymax
 !  uu=0.0d0;rho=0.0d0
 !  do q=1,qmom
-!    do l=2,Ny+1
-!      do k=2,Nx+1
+!    do l=1,Ny+2
+!      do k=1,Nx+2
 !        if(is_solid(k,l).eq.1) then
-!          uu(k-1,l-1,1)=0.0d0
-!          uu(k-1,l-1,2)=0.0d0
-!          rho(k-1,l-1)=1.0d0
+!          uu(k,l,1)=0.0d0
+!          uu(k,l,2)=0.0d0
+!          rho(k,l)=1.0d0
 !        else
-!          uu(k-1,l-1,1) = uu(k-1,l-1,1)+vunit*ff(k,l,q)*dot2d(ee(:,q),xhat)
-!          uu(k-1,l-1,2) = uu(k-1,l-1,2)+vunit*ff(k,l,q)*dot2d(ee(:,q),yhat)
-!          rho(k-1,l-1) = rho(k-1,l-1)+ff(k,l,q)
+!          uu(k,l,1) = uu(k,l,1)+vunit*ff(k,l,q)*dot2d(ee(:,q),xhat)
+!          uu(k,l,2) = uu(k,l,2)+vunit*ff(k,l,q)*dot2d(ee(:,q),yhat)
+!          rho(k,l) = rho(k,l)+ff(k,l,q)
 !        endif
 !      enddo
 !    enddo
@@ -68,27 +68,26 @@ endsubroutine allocate_avg
 !***************************************************************
 subroutine calc_avg()
   integer :: q,i,j
-  double precision :: uxmax,uymax
+
   uu=0.00d0;rho=0.0d0
   uu(:,:,1) = ff(:,:,3)+ff(:,:,6)+ff(:,:,9)-(ff(:,:,1) &
                     + ff(:,:,4)+ff(:,:,7))
   uu(:,:,2) = ff(:,:,7)+ff(:,:,8)+ff(:,:,9)-(ff(:,:,1) &
                      + ff(:,:,2)+ff(:,:,3))
-  
-   do q=1,qmom
-     rho = rho+ff(:,:,q)
-     !do j=1,Ny+2
-     !  do i=1,Nx+2
-     !    if(is_solid(i,j).eq.1) then
-     !     uu(i,j,1)=0.0d0
-     !     uu(i,j,2)=0.0d0
-     !     rho(i,j)=1.0d0
-     !    endif
-     ! enddo
-     !enddo
-  enddo
-  uu(:,:,1)=vunit*uu(:,:,1)/rho(:,:)
-  uu(:,:,2)=vunit*uu(:,:,2)/rho(:,:)
+  do q=1,qmom
+    rho(:,:) = rho(:,:)+ff(:,:,q)
+!    do j=1,Ny+2
+!      do i=1,Nx+2
+!        if(is_solid(i,j).eq.1) then
+!         uu(i,j,1)=0.0d0
+!         uu(i,j,2)=0.0d0
+!         rho(i,j)=1.0d0
+!        endif
+!      enddo
+!    enddo
+   enddo
+  uu(:,:,1)=uu(:,:,1)/rho(:,:)
+  uu(:,:,2)=uu(:,:,2)/rho(:,:)
 endsubroutine calc_avg
 !***************************************************************
 
@@ -145,13 +144,13 @@ subroutine rwrite_density_uu()
   enddo
   close(1)
 
-  open(unit=10, file='vorticity_idl.txt', action='write', status='replace')
+!  open(unit=10, file='vorticity_idl.txt', action='write', status='replace')
   !write(11,*) rho(:,1)
   !write(11,*) rho(1,:)
-  write(10,*) Nx
-  write(10,*) Ny
-  write(10,*) curl_uu(:,:)
-  close(10)
+!  write(10,*) Nx
+!  write(10,*) Ny
+!  write(10,*) curl_uu(:,:)
+!  close(10)
 
   open(unit=11, file='velocity.txt', action='write', status='replace')
 
@@ -159,16 +158,25 @@ subroutine rwrite_density_uu()
   write(11,*) Ny
   write(11,*) uu(:,:,1)
   write(11,*) uu(:,:,2)
-  !write(*,*) maxval(uu(:,:,1)),maxval(uu(:,:,2))
+ !write(*,*) maxval(uu(:,:,1)),maxval(uu(:,:,2))
   close(11)
 
   open(unit=12, file='velocity_math_vx.dat', action='write', status='replace')
-  write(12,*) uu(:,:,1)
+  DO k=1,Nx+2
+    WRITE(12,*) (uu(k,l,1), l=1,Ny+2)
+  END DO
   close(12)
   open(unit=13, file='velocity_math_vy.dat', action='write', status='replace')
-  write(13,*) uu(:,:,2)
+  do k=1, Nx+2
+    write(13,*) (uu(k,l,2), l=1,Ny+2)
+  enddo
   close(13)
 
+ open(unit=10, file='density.dat', action='write', status='replace')
+  do k=1, Nx+2
+    write(10,*) (rho(k,l), l=1,Ny+2)
+  enddo
+  close(10)
 
 endsubroutine rwrite_density_uu
 !***************************************************************  

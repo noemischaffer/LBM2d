@@ -51,12 +51,11 @@ subroutine write_input()
   if (exists) then
      write(*,*) 'simulation with:'
      write(*,*) 'Nx=',Nx,'Ny=',Ny,'Lx=',Lx,'Ly=',Ly,'dx=',dx,'dy=',dy
-     write(*,*) 'unit of velocity, vunit=',vunit
      write(*,*) 'collision time scale tau=',tau
      write(*,*) 'Number of time steps, iTMAX=', iTMAX
      write(*,*) 'Writing parameters to file:',trim(datadir),'/',trim(input_param_file)
      open(unit,FILE=trim(datadir)//'/'//trim(input_param_file),FORM='formatted')
-     write(unit,*) Nx,Ny,Lx,Ly,vunit,tau,iTMAX
+     write(unit,*) Nx,Ny,Lx,Ly,tau,iTMAX
      close(unit)
      write(*,*) '.......done.     '
   else
@@ -95,13 +94,13 @@ subroutine write_snap(itime)
   write(*,*) trim(datadir)//'/'//trim(usnap_file)
   write(*,*) trim(datadir)//'/'//trim(rsnap_file)
   open(unit,FILE=trim(datadir)//'/'//trim(usnap_file),FORM='formatted')
-  do iy=1,Ny
-     write(unit,*)(uu(ix,iy,1),uu(ix,iy,2),ix=1,Nx)
+  do ix=1,Nx+2
+     write(unit,*)(uu(ix,iy,1),uu(ix,iy,2),iy=1,Ny+2)
   enddo
   close(unit)
   open(unit,FILE=trim(datadir)//'/'//trim(rsnap_file),FORM='formatted')
-  do iy=1,Ny
-     write(unit,*)(rho(ix,iy),ix=1,Nx)
+  do ix=1,Nx+2
+     write(unit,*)(rho(ix,iy),iy=1,Ny+2)
   enddo
   close(unit)
   write(*,*) '....done.'
@@ -115,8 +114,8 @@ subroutine write_immersed_boundary(itime)
   write(*,*) 'writing is_solid array to file:'
   write(*,*) trim(datadir)//'/'//trim(is_solid_file)
   open(unit,FILE=trim(datadir)//'/'//trim(is_solid_file),FORM='formatted')
-  do iy=1,Ny
-     write(unit,*)(is_solid(ix,iy),ix=1,Nx)
+  do ix=1,Nx+2
+     write(unit,*)(is_solid(ix,iy),iy=1,Ny+2)
   enddo
   close(unit)
 endsubroutine write_immersed_boundary
