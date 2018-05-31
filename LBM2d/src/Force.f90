@@ -32,13 +32,16 @@ module Force
 contains
 !***************************************************************
 subroutine read_fpars(unit,iostat)
+
 ! read the namelist force_pars
   integer, intent(in) :: unit
   integer, intent(out) :: iostat
   read(unit, NML=force_pars, IOSTAT=iostat)
+
 endsubroutine read_fpars
   !***************************************************************
 subroutine get_uforce(ii,jj,uout)
+
   integer, intent(in) :: ii,jj
   double precision,dimension(2), intent(out) :: uout
   double precision, dimension(2) :: gg,force
@@ -49,21 +52,26 @@ subroutine get_uforce(ii,jj,uout)
   rhoin=rho(ii,jj)
   select case (iforce)
   case('none')
-     uout=uin
+    force(1)=0.0d0
+    force(2)=0.0d0
+    uout=uin+(tau*force/rhoin)
   case('xgravity')
     gg(1)=gm
     gg(2)=0.0d0
     force=gg*rhoin
+    uout=uin+(tau*force/rhoin)
   case('kolmogorov_x')
     force(1)=famp*sin(2.0d0*d_pi*kk*yy(jj)/Ly)
     force(2)=0.0d0
+    uout=uin+(tau*force/rhoin)
   case('kolmogorov_y')
     force(1)=0.0d0
     force(2)=famp*sin(2.0d0*d_pi*kk*xx(ii)/Lx)
+    uout=uin+(tau*force/rhoin)
   case default
      call fatal_error("force","iforce does not match")
   endselect
-  uout=uin+(tau*force/rhoin)
+
 endsubroutine get_uforce
 !***************************************************************
 endmodule Force

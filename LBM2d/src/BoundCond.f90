@@ -14,10 +14,9 @@ private
 public :: read_bc,initialize_bc, boundary_condition, const_vleft,const_vright
 character (len=labellen) :: bc_left='periodic',bc_right='periodic'
 character (len=labellen) :: bc_bot='noslip',bc_top='noslip'
-double precision :: radius
 ! It is left, right, bottom, top
 namelist /bc_pars/ &
-   bc_left,bc_right,bc_bot,bc_top, radius
+   bc_left,bc_right,bc_bot,bc_top
 
 !***************************************************************
 contains
@@ -31,7 +30,6 @@ endsubroutine read_bc
 !***************************************************************
 subroutine initialize_bc()
 integer :: q
-double precision :: v
 !
 ! left boundary
 !
@@ -39,9 +37,13 @@ double precision :: v
      case('periodic')
         call pbcx
      case('dirichlet')
-       !v = (Re*((1.0d0/3.0d0)*(tau-(1.0d0/2.0d0)))) / (2*radius)
-       !call const_vleft(v)
+       do q=1,qmom
+         ff(1,:,q)=weight(q)
+       enddo
      case('const_v')
+       do q=1,qmom
+         ff(1,:,q)=weight(q)
+       enddo
      case default
        call fatal_error('boundary condition','nothing other than pbc coded') 
   endselect
@@ -52,10 +54,11 @@ double precision :: v
   select case(bc_right)
      case('periodic')
      case('right_copied')
-    !    call right_copy()
+        call right_copy()
      case('dirichlet')
-       !v = (Re*((1.0d0/3.0d0)*(tau-(1.0d0/2.0d0)))) / (2*radius)
-       !call const_vright(v)
+       do q=1,qmom
+         ff(Nx+2,:,q)=weight(q)
+       enddo
      case default
        call fatal_error('boundary before','nothing other than pbc coded')
   endselect
@@ -97,6 +100,8 @@ subroutine pbcy()
 endsubroutine pbcy
 !***************************************************************
 subroutine pbcx()
+
+integer :: q
   ff(1,:,:)=ff(Nx+1,:,:)
   is_solid(1,:)=is_solid(Nx+1,:)
   ff(Nx+2,:,:)=ff(2,:,:)
@@ -104,13 +109,13 @@ subroutine pbcx()
 endsubroutine pbcx
 !***************************************************************
 subroutine right_copy()
+
   ff(Nx+2,:,:)=ff(Nx+1,:,:)
-  is_solid(Nx+2,:)=is_solid(Nx+1,:)
+
 endsubroutine right_copy
 !***************************************************************
 subroutine boundary_condition()
-!
-  double precision :: v
+
   double precision, dimension(2) :: vel
   double precision :: rho0
 !
@@ -120,10 +125,10 @@ subroutine boundary_condition()
   case('periodic') 
      call pbcx()
   case('dirichlet')
-     v = (Re*((1.0d0/3.0d0)*(tau-(1.0d0/2.0d0)))) / (2*radius)
-     call const_vleft(v)
+     v_const = 0.02
+     call const_vleft(v_const)
   case('const_v')
-     vel(1) = (Re*((1.0d0/3.0d0)*(tau-(1.0d0/2.0d0)))) / (2*radius)
+     vel(1) = 0.02
      vel(2) = 0.0d0
      call const_velocity(vel)
   case default
@@ -135,9 +140,8 @@ subroutine boundary_condition()
   select case(bc_right)
   case('periodic')
   case('dirichlet')
-    ! v = (Re*((1.0d0/3.0d0)*(tau-(1.0d0/2.0d0)))) / (2*radius)
-    rho0=1.0d0
-     call const_vright(rho0)
+     v_const = 0.02
+     call const_vright(v_const)
   case('right_copied')
      call right_copy()
   case default
@@ -164,33 +168,17 @@ subroutine boundary_condition()
   case default
     call fatal_error('boundary before','bc not found')
  endselect
-!
-
-!call immersed_boundary()
 
 endsubroutine boundary_condition
-!***************************************************************
-subroutine immersed_boundary()
-  integer :: k,l,q,p
-  do q=1,qmom
-     do l=2,Ny+1
-        do k=2,Nx+1
-           if (is_solid(k,l).eq.0) then
-              p=mirrorq(q)
-              ff(k,l,p)=ff(k,l,q) ! this is bounce-back
-           endif
-        enddo
-     enddo
-  enddo
-endsubroutine immersed_boundary
 !****************************************************************
 subroutine stream_bot()
-  integer :: k,l,q,m,n
+  integer :: k,l,q,m,n,p
 !
 ! At the bottom boundary we should stream in (except at the two corners)
 ! three components of momentum : 1,2,3  
 !
   do q=1,3
+  p=mirrorq(q)
      l=1
      n=l-ee_int(2,q)
      do k=2,Nx+1
@@ -200,7 +188,7 @@ subroutine stream_bot()
         ! streaming from is a fluid point(-1)
         !
         if (is_solid(m,n).eq.-1) then
-           ff(k,l,q) = ff(m,n,q)
+           ff(k,l,p) = ff(m,n,q)
         endif
      enddo
   enddo
@@ -208,100 +196,96 @@ subroutine stream_bot()
 ! For the left corner  
 !
   k=1
+  l=1
   do q=1,2
-     l=1
-     n=l-ee_int(2,q)
-     !do k=2,Nx+1
-        m=k-ee_int(1,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-        if (is_solid(m,n).eq.-1) then
-           ff(k,l,q) = ff(m,n,q)
-        endif
-     !enddo
+    p=mirrorq(q)
+    n=l-ee_int(2,q)
+    m=k-ee_int(1,q)
+    !
+    !stream only if the point you are
+    ! streaming from is a fluid point(-1)
+    !
+    if (is_solid(m,n).eq.-1) then
+      ff(k,l,p) = ff(m,n,q)
+    endif
   enddo
 !
 ! For the right corner  
 !
   k=Nx+2
+  l=1
   do q=2,3
-     l=1
-     n=l-ee_int(2,q)
-     !do k=2,Nx+1
-        m=k-ee_int(1,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-        if (is_solid(m,n).eq.-1) then
-           ff(k,l,q) = ff(m,n,q)
-        endif
-     !enddo
+  p=mirrorq(q)
+  n=l-ee_int(2,q)
+  m=k-ee_int(1,q)
+  !
+  !stream only if the point you are
+  ! streaming from is a fluid point(-1)
+  !
+  if (is_solid(m,n).eq.-1) then
+     ff(k,l,p) = ff(m,n,q)
+  endif
   enddo
 endsubroutine stream_bot
 !***************************************************************
 subroutine stream_top()
-  integer :: k,l,q,m,n
+  integer :: k,l,q,m,n,p
 !
 ! At the top boundary we should stream in (except at the two corners)
 ! three components of momentum : 7,8,9  
 !
+  l=Ny+2
   do q=7,9
-     l=Ny+2
-     n=l-ee_int(2,q)
+    p=mirrorq(q)
+    n=l-ee_int(2,q)
     do k=2,Nx+1
-        m=k-ee_int(1,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-        if (is_solid(m,n).eq.-1) then
-           ff(k,l,q) = ff(m,n,q)
-        endif
-     enddo
+      m=k-ee_int(1,q)
+      !
+      !stream only if the point you are
+      ! streaming from is a fluid point(-1)
+      !
+      if (is_solid(m,n).eq.-1) then
+        ff(k,l,p) = ff(m,n,q)
+      endif
+    enddo
   enddo
 !
 ! For the left corner  
 !
   k=1
+  l=Ny+2
   do q=7,8
-     l=Ny+2
-     n=l-ee_int(2,q)
-   !  do k=2,Nx+1
-        m=k-ee_int(1,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-        if (is_solid(m,n).eq.-1) then
-           ff(k,l,q) = ff(m,n,q)
-        endif
-    ! enddo
-  enddo
+    p=mirrorq(q)
+    n=l-ee_int(2,q)
+    m=k-ee_int(1,q)
+   !
+   !stream only if the point you are
+   ! streaming from is a fluid point(-1)
+   !
+   if (is_solid(m,n).eq.-1) then
+     ff(k,l,p) = ff(m,n,q)
+   endif
+ enddo
 !
 ! For the right corner  
 ! 
   k=Nx+2
+  l=Ny+2
   do q=8,9
-     l=Ny+2
-     n=l-ee_int(2,q)
-     !do k=2,Nx+1
-        m=k-ee_int(1,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-        if (is_solid(m,n).eq.-1) then
-           ff(k,l,q) = ff(m,n,q)
-        endif
-     !enddo
+    p=mirrorq(q)
+    n=l-ee_int(2,q)
+    m=k-ee_int(1,q)
+    !
+    !stream only if the point you are
+    ! streaming from is a fluid point(-1)
+    !
+    if (is_solid(m,n).eq.-1) then
+      ff(k,l,p) = ff(m,n,q)
+    endif
   enddo
 endsubroutine stream_top
 !***************************************************************
 subroutine const_vleft(v)
-
 
 integer :: k,l,m,n,q
 double precision :: v
@@ -310,57 +294,53 @@ double precision :: v
 ! three components of momentum : 1, 4, 7  
 !
 
-write(*,*) 'Dirichlet constant veclocity on left'
 
   k=1
   do q=1,7,3
-     m=k-ee_int(1,q)
+    m=k-ee_int(1,q)
     do l=2,Ny+1
-        n=l-ee_int(2,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-        if (is_solid(m,n).eq.-1) then
-           ff(k,l,q) = ff(m,n,q)
-        endif
-     enddo
+      n=l-ee_int(2,q)
+      !
+      !stream only if the point you are
+      ! streaming from is a fluid point(-1)
+      !
+      if (is_solid(m,n).eq.-1) then
+        ff(k,l,q) = ff(m,n,q)
+      endif
+    enddo
   enddo
-
 !
 !For top corner
 !
   l=Ny+2
   k=1
   do q=4,7,3
-     m=k-ee_int(1,q)
-     n=l-ee_int(2,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-     if (is_solid(m,n).eq.-1) then
-        ff(k,l,q) = ff(m,n,q)
-     endif
+    m=k-ee_int(1,q)
+    n=l-ee_int(2,q)
+    !
+    !stream only if the point you are
+    ! streaming from is a fluid point(-1)
+    !
+    if (is_solid(m,n).eq.-1) then
+      ff(k,l,q) = ff(m,n,q)
+    endif
   enddo
-
 !
 !For bottom corner
 !
   l=1
   k=1
   do q=1,4,3
-     m=k-ee_int(1,q)
-     n=l-ee_int(2,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-     if (is_solid(m,n).eq.-1) then
-        ff(k,l,q) = ff(m,n,q)
-     endif
+    m=k-ee_int(1,q)
+    n=l-ee_int(2,q)
+    !
+    !stream only if the point you are
+    ! streaming from is a fluid point(-1)
+    !
+    if (is_solid(m,n).eq.-1) then
+      ff(k,l,q) = ff(m,n,q)
+    endif
   enddo
-
 !
 !Then the rest of the fs and the density on the wall is
 !calculated based on Sukop and Thorne.
@@ -370,19 +350,18 @@ write(*,*) 'Dirichlet constant veclocity on left'
 !
    k=1
    do l=2,Ny+1
-      rho(k,l) = (2.0d0*(ff(k,l,1)+ff(k,l,4)+ff(k,l,7))+ff(k,l,2)+ &
-                 ff(k,l,5)+ff(k,l,8))/(1.0d0-v)
-      ff(k,l,6) = ff(k,l,4)+(2.0d0/3.0d0)*v*rho(k,l)
-      ff(k,l,3) = ((1.0d0/6.0d0)*v*rho(k,l))+ff(k,l,7)- &
-                 (1.0d0/2.0d0)*(ff(k,l,2)-ff(k,l,8))
-      ff(k,l,9) = ((1.0d0/6.0d0)*v*rho(k,l))+ff(k,l,1)- &
-                 (1.0d0/2.0d0)*(ff(k,l,8)-ff(k,l,2))
+     rho(k,l) = (2.0d0*(ff(k,l,1)+ff(k,l,4)+ff(k,l,7))+ff(k,l,2)+ &
+                ff(k,l,5)+ff(k,l,8))/(1.0d0-v)
+     ff(k,l,6) = ff(k,l,4)+(2.0d0/3.0d0)*v*rho(k,l)
+     ff(k,l,3) = ((1.0d0/6.0d0)*v*rho(k,l))+ff(k,l,7)- &
+                (1.0d0/2.0d0)*(ff(k,l,2)-ff(k,l,8))
+     ff(k,l,9) = ((1.0d0/6.0d0)*v*rho(k,l))+ff(k,l,1)- &
+                (1.0d0/2.0d0)*(ff(k,l,8)-ff(k,l,2))
    enddo
 
 endsubroutine const_vleft
 !***************************************************************
-subroutine const_vright(rho0)
-
+subroutine const_vright(v)
 
 integer :: k,l,m,n,q
 double precision :: v
@@ -394,20 +373,19 @@ double precision :: rho0
 
 !  write(*,*) 'the in/out-flow velocty is ', v
 
-write(*,*) 'Dirichlet constant pressure on right'
   k=Nx+2
   do q=3,9,3
-     m=k-ee_int(1,q)
+    m=k-ee_int(1,q)
     do l=2,Ny+1
-        n=l-ee_int(2,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-        if (is_solid(m,n).eq.-1) then
-           ff(k,l,q) = ff(m,n,q)
-        endif
-     enddo
+      n=l-ee_int(2,q)
+      !
+      !stream only if the point you are
+      ! streaming from is a fluid point(-1)
+      !
+      if (is_solid(m,n).eq.-1) then
+         ff(k,l,q) = ff(m,n,q)
+      endif
+    enddo
   enddo
 
 !
@@ -416,32 +394,31 @@ write(*,*) 'Dirichlet constant pressure on right'
   l=Ny+2
   k=Nx+2
   do q=6,9,3
-     m=k-ee_int(1,q)
-     n=l-ee_int(2,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-     if (is_solid(m,n).eq.-1) then
-        ff(k,l,q) = ff(m,n,q)
-     endif
+    m=k-ee_int(1,q)
+    n=l-ee_int(2,q)
+    !
+    !stream only if the point you are
+    ! streaming from is a fluid point(-1)
+    !
+    if (is_solid(m,n).eq.-1) then
+      ff(k,l,q) = ff(m,n,q)
+    endif
   enddo
-
 !
 !For bottom corner
 !
   l=1
   k=Nx+2
   do q=3,6,3
-     m=k-ee_int(1,q)
-     n=l-ee_int(2,q)
-        !
-        !stream only if the point you are
-        ! streaming from is a fluid point(-1)
-        !
-     if (is_solid(m,n).eq.-1) then
-        ff(k,l,q) = ff(m,n,q)
-     endif
+    m=k-ee_int(1,q)
+    n=l-ee_int(2,q)
+    !
+    !stream only if the point you are
+    ! streaming from is a fluid point(-1)
+    !
+    if (is_solid(m,n).eq.-1) then
+      ff(k,l,q) = ff(m,n,q)
+    endif
   enddo
 
 !
@@ -453,15 +430,12 @@ write(*,*) 'Dirichlet constant pressure on right'
 !
    k=Nx+2
    do l=2,Ny+1
-      !rho(k,l) = (2.0d0*(ff(k,l,3)+ff(k,l,6)+ff(k,l,9))+ff(k,l,2)+ &
-       !          ff(k,l,5)+ff(k,l,8))/(1.0d0+v)
-      uu(k,l,1) = -1.0d0+(2.0d0*(ff(k,l,3)+ff(k,l,6)+ff(k,l,9))+ff(k,l,2)+ &
-                 ff(k,l,5)+ff(k,l,8))/rho0
-      ff(k,l,4) = ff(k,l,6)-((2.0d0/3.0d0)*uu(k,l,1)*rho0)
-      ff(k,l,7) = -((1.0d0/6.0d0)*uu(k,l,1)*rho0)+ff(k,l,3)- &
-                 (1.0d0/2.0d0)*(ff(k,l,8)-ff(k,l,2))
-
-      ff(k,l,1) = -((1.0d0/6.0d0)*uu(k,l,1)*rho0)+ff(k,l,9)- &
+     rho(k,l) = (2.0d0*(ff(k,l,3)+ff(k,l,6)+ff(k,l,9))+ff(k,l,2)+ &
+                ff(k,l,5)+ff(k,l,8))/(1.0d0+v)
+     ff(k,l,4) = ff(k,l,6)-((2.0d0/3.0d0)*v*rho(k,l))
+     ff(k,l,7) = -((1.0d0/6.0d0)*v*rho(k,l))+ff(k,l,3)- &
+                (1.0d0/2.0d0)*(ff(k,l,8)-ff(k,l,2))
+     ff(k,l,1) = -((1.0d0/6.0d0)*v*rho(k,l))+ff(k,l,9)- &
                  (1.0d0/2.0d0)*(ff(k,l,2)-ff(k,l,8))
    enddo
 
@@ -472,16 +446,14 @@ double precision, dimension(2) :: vel
 double precision :: rho0
 integer :: q,k,l
 
-rho0 = 1.0d0
-k=1
-do q=1,qmom
-  do l=2,Ny+1
-    call get_feq(q,vel,rho0,ff(k,l,q))
+  rho0 = 1.0d0
+  k=1
+  do q=1,qmom
+    do l=2,Ny+1
+      call get_feq(q,vel,rho0,ff(k,l,q))
+    enddo
   enddo
-enddo
   
-
-
 endsubroutine const_velocity
 !***************************************************************
 endmodule BoundCond

@@ -10,20 +10,15 @@
 ! in terms of cache misses ! But as the SoA is closest to the pencil
 ! structures we use that now. 
 !***************************************************************
-!
-!The convention is that:
-!  if a loop goes between 1-Nx+2 (1-Ny+2) the loop index is i (j)
-!  if a loop goes between 2-Nx+1 (2-Ny+1) the loop index is k (l)
-!
-!***************************************************************
 
 module Evolve
   use Cdata
   use Sub
   implicit none
   private
-  public :: stream,comp_equilibrium_BGK,get_feq,collision 
+  public :: stream,comp_equilibrium_BGK,get_feq,collision, allocate_shear,free_shear
   integer,allocatable,dimension(:) :: iin_pencil
+  logical :: lshear=.false.
 !------the following are public ------------
 !-------------------------------------------
 contains
@@ -35,30 +30,19 @@ endsubroutine initialize_evolve
 subroutine finalize_evolve()
 
 endsubroutine finalize_evolve
-!***************************************************************
-!subroutine stream()
-!  integer :: k,l,q,m,n
-!  do q=1,qmom
-!     do l=2,Ny+1
-!        n=l-ee_int(2,q)
-!        do k=2,Nx+1
-           !
-           ! I stream-in to all points which are not "solid"(1)
-           ! which implies that I stream-in to surface points (0)
-           ! too.
-           !
-!           if(is_solid(k,l).ne.1) then
-!              m=k-ee_int(1,q)
-!              fftemp(k,l,q) = ff(m,n,q)
-             ! write(*,*) fftemp(i,j,q), i, j, q, 'streamed from', iin, jin, q
-!           endif
-!        enddo
-!     enddo
-!  enddo
-!endsubroutine stream
-!***************************************************************
+!**************************************************************************
+subroutine allocate_shear()
+
+  allocate(sigma(Nx+2,Ny+2,2,2))
+  sigma=0.0d0
+  lshear=.true.
+
+endsubroutine allocate_shear
+!*************************************************************************
 subroutine stream()
+
   integer :: m,n,q,k,l,p
+
   fftemp=ff
   do q=1,qmom
      do l=2,Ny+1
@@ -66,45 +50,20 @@ subroutine stream()
         do k=2,Nx+1
            m=k-ee_int(1,q)
            select case(is_solid(k,l))
-           case(1) ! do nothing
+           case(1) ! do nothing if solid point
            case(-1)
-              ff(k,l,q) = fftemp(m,n,q) ! stream
-             ! write(*,*) fftemp(i,j,q), i, j, q, 'streamed from', iin, jin, q
+              ff(k,l,q) = fftemp(m,n,q) ! stream if fluid point
            case(0)
               p=mirrorq(q)
-              ff(k,l,q) = fftemp(m,n,q)
-              !write(*,*) ff(k,l,p), 'and', ff(k,l,q), k,l,p
+              ff(k,l,p) = fftemp(k,l,q) ! reflect back if surface point
            endselect
         enddo
      enddo
   enddo
 endsubroutine stream
 !***************************************************************
-!subroutine comp_equilibrium_BGK()
-!  use Avg
-!  use Force
-!  integer :: q,k,l
-!  double precision,dimension(2) :: ueq
-!  double precision :: edotu,usqr
-!  do q=1,qmom
-!     do l=2,Ny+1
-!        do k=2,Nx+1
-!           if(is_solid(k,l).ne.1) then
-!              call get_ueq(uu(k-1,l-1,:),rho(k-1,l-1),ueq)
-!              edotu=dot2d(ee(:,q),ueq)
-!              usqr=dot2d(ueq,ueq)
-!              ffEq(k,l,q) = weight(q)*rho(k-1,l-1)*(1.0d0+3.0d0*edotu/(vunit) &
-!                   +(9.0d0/2.0d0)*(edotu**2.0d0)/(vunit**4.0d0) &
-!                   -(3.0d0/2.0d0)*usqr/(vunit**2.0d0) &
-!                    )
-!           endif
-!        enddo
-!     enddo
-!  enddo 
-
-!endsubroutine comp_equilibrium_BGK
-!***************************************************************
 subroutine comp_equilibrium_BGK()
+
   use Avg
   use Force
   integer :: q,kk,ll
@@ -133,39 +92,49 @@ subroutine get_feq(q,uin,rhoin,fEq)
   double precision,intent(out) :: fEq
 
   uxy=dot2d(ee(:,q),uin)
-  usqr=uin(1)*uin(1)+uin(2)*uin(2)
+  usqr=dot2d(uin,uin)
   fEq = weight(q)*rhoin*(1.0d0+3.0d0*uxy &
               +(9.0d0/2.0d0)*(uxy**2) &
               -(3.0d0/2.0d0)*usqr &
                )
 
-
 endsubroutine get_feq
 !***************************************************************
-!
 subroutine collision()
-  integer :: q,k,l,p
+
+  integer :: q,k,l,p,nu,mu
 !
 ! If a point is solid(1)   : do nothing
 !               surface(0) : bounce-back
 !               fluid(-1)  : collision  
 !  
+  sigma=0.0d0
   do q=1,qmom
      do l=2,Ny+1
         do k=2,Nx+1
            select case(is_solid(k,l))
            case(1)
            case(0)
-              p=mirrorq(q)
-              ff(k,l,p)=ff(k,l,q) ! this is bounce-back
            case(-1)
-              ff(k,l,q) = ff(k,l,q) + (ffEq(k,l,q)-ff(k,l,q))/tau
-           endselect
+             ff(k,l,q) = ff(k,l,q) + (ffEq(k,l,q)-ff(k,l,q))/tau
+             do mu=1,2; do nu=1,2
+                sigma(k,l,mu,nu)=(1.0d0 - (1.0d0/(2.0d0*tau))) &
+                           *(ff(k,l,q)-ffEq(k,l,q))*ee(mu,q)*ee(nu,q) &
+                           + sigma(k,l,mu,nu)
+            enddo;enddo 
+          endselect
         enddo
      enddo
   enddo
 
-!
 endsubroutine collision
+!***************************************************************
+subroutine free_shear()
+
+  if (lshear .eqv. .true.) then
+     deallocate(sigma)
+  endif
+
+endsubroutine free_shear
 !***************************************************************
 endmodule Evolve

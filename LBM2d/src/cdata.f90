@@ -33,6 +33,7 @@ module Cdata
   character(len=labellen), allocatable,dimension(:) :: ts_name
   integer :: Nlarge = 1
   integer :: Nsurf
+  double precision :: radius, center_x, center_y, v_const
 !
 namelist /cdata_pars/ &
      Nx,Ny,tau,iTMAX,lstart,ndiag,Re
@@ -40,62 +41,69 @@ namelist /cdata_pars/ &
 contains
 !***********************!
 subroutine rparam_cdata(unit,iostat)
+
 ! read the namelist grid_pars
   integer, intent(in) :: unit
   integer, intent(out) :: iostat
   read(unit, NML=cdata_pars, IOSTAT=iostat)
   Nlarge=Nx*Ny
 !----------------------
+
 endsubroutine rparam_cdata
 !***********************!
 subroutine allocate_cdata()
+
 integer :: i,j
 !---------------------------------------
 ! The array is_solid is occupied in the following
 ! manner. If it is  1  it is solid point
-!                   0  it is a boundary point
+!                   0 as it is a boundary point
 !                   -1 it is a fluid point
 !---------------------------------------
-allocate(is_solid(Nx+2,Ny+2))
+  allocate(is_solid(Nx+2,Ny+2))
 !
 ! first assume that all points are fluid
 ! this array is overwritten when the obstacles are set
-is_solid=-1
-allocate(ff(Nx+2,Ny+2,qmom))
-ff=0.0d0
-ff(:,:,5) = 1.0d0
+  is_solid=-1
+  allocate(ff(Nx+2,Ny+2,qmom))
+  ff=0.0d0
+  ff(:,:,5) = 1.0d0
 !
 ! this sets that all momentum are zero
 ! except the zero momentum which corresponds
 ! to q = 5
 !
-allocate(fftemp(Nx+2,Ny+2,qmom))
-fftemp=ff
-allocate(ffEq(Nx+2,Ny+2,qmom))
-ffEq=ff
-Lx=dx*dfloat(Nx)
-Ly=dy*dfloat(Ny)
-allocate(xx(Nx+2))
-do i=1, Nx+2
-  xx(i)=(i+1)*dx
-enddo
-allocate(yy(Ny+2))
-do j=1, Ny+2
-  yy(j)=(j+1)*dy
-enddo
-lffaloc=.true.
+  allocate(fftemp(Nx+2,Ny+2,qmom))
+  fftemp=ff
+  allocate(ffEq(Nx+2,Ny+2,qmom))
+  ffEq=ff
+  Lx=dx*dfloat(Nx)
+  Ly=dy*dfloat(Ny)
+  allocate(xx(Nx+2))
+  do i=1, Nx+2
+    xx(i)=(i+1)*dx
+  enddo
+  allocate(yy(Ny+2))
+  do j=1, Ny+2
+    yy(j)=(j+1)*dy
+  enddo
+  lffaloc=.true.
+
 endsubroutine allocate_cdata
 !***************************************************************  
 subroutine free_cdata()
+
   if (lffaloc .eqv. .true.) then
-     deallocate(ff)
-     deallocate(fftemp)
-     deallocate(ffEq)
+    deallocate(ff)
+    deallocate(fftemp)
+    deallocate(ffEq)
   endif
+
 endsubroutine free_cdata
 !***********************!
 subroutine set_model()
-  integer :: q,i,j
+
+integer :: q,i,j
 !-------------------------------------!
 
 !--------------------------------------------!
@@ -114,6 +122,7 @@ subroutine set_model()
   mirrorq(4)=6;mirrorq(5)=5;mirrorq(6)=4
   mirrorq(7)=3;mirrorq(8)=2;mirrorq(9)=1
 !---------------------------------------------!
+
 endsubroutine set_model
 !***********************!
 endmodule Cdata

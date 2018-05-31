@@ -15,6 +15,7 @@ use ShearStress
 implicit none
 integer :: it,jouter,iin,k,l
 character (len=25) :: filename
+character (len=25) :: filenama
 !---------------------!
 write(*,*) '***************************************'
 write(*,*) '    STARTING LBM2d                     '
@@ -49,7 +50,6 @@ if (lstart) then
    write(*,*) ' Then we set the immersed objects .....     '
    call init_obstacle()
    call construct_surface()
-!   call wall_shear()
    write(*,*) 'and write down the is_solid array ...        '
    call write_immersed_boundary(0)
    call boundary_condition()
@@ -70,24 +70,32 @@ do it=1,iTMAX
   call comp_equilibrium_BGK()
   call collision()
   call update_surface()
-!  call wall_shear()
   call calc_diag()
   call write_ts(it)
   if (mod(it,1) .eq. 0) then
-    WRITE (filename, '(a,I5.5,a)') 'density_series',it,'.dat'
+    WRITE (filename, '(a,I5.5,a)') 'velocitx_series',it,'.dat'
     open(unit=10, file=filename, action='write', status='replace')
      do k=1, Nx+2
-       write(10,*) (ff(k,l,3), l=1,Ny+2)
+       write(10,*) (uu(k,l,1), l=1,Ny+2)
      enddo
     close(10)
+    WRITE (filenama, '(a,I5.5,a)') 'velocity_series',it,'.dat'
+    open(unit=11, file=filenama, action='write', status='replace')
+     do k=1, Nx+2
+       write(11,*) (uu(k,l,2), l=1,Ny+2)
+     enddo
+    close(11)
   endif
 enddo
 write(*,*) '......done'
 write(*,*) '===writing the final snapshot ============'
 call write_snap(iTMAX)
 call rwrite_density_uu()
+call wall_shear()
+call theo_solution()
 write(*,*) '=========================================='
 call free_avg()
+call free_shear()
 call free_cdata()
 endprogram lbm
 !----------------------------------!

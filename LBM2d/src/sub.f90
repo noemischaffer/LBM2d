@@ -18,4 +18,12 @@ real function dot2d(A,B)
     dot2d = A(1)*B(1)+A(2)*B(2)
 endfunction dot2d
 !***************************************************************
+subroutine dotmv(A,B,C)
+  double precision, dimension(2,2) :: A
+  double precision, dimension(2) :: B
+  double precision, dimension(2) :: C
+    C(1) = A(1,1)*B(1)+A(1,2)*B(2)
+    C(2) = A(2,1)*B(1)+A(2,2)*B(2)
+endsubroutine dotmv
+!***************************************************************
 endmodule Sub

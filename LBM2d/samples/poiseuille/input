@@ -1,11 +1,9 @@
 &cdata_pars
   Nx=40
   Ny=40
-  Lx=12
-  Ly=12
   vunit=1.0
-  tau=10.0
-  iTMAX=80
+  tau=5.0
+  iTMAX=10000
   ndiag=10
 /
 &init_cond
@@ -20,4 +18,4 @@
 /
 &force_pars
   iforce='xgravity'
-  gm=0.01
+  gm=0.002

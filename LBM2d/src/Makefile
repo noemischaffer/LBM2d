@@ -8,8 +8,8 @@ default:
 	$(FC) $(FO) Avg.f90 -o Avg.o
 	$(FC) $(FO) InitCond.f90 -o InitCond.o 
 	$(FC) $(FO) Force.f90  -o Force.o
-	$(FC) $(FO) BoundCond.f90  -o BoundCond.o
 	$(FC) $(FO) Evolve.f90  -o Evolve.o 
+	$(FC) $(FO) BoundCond.f90  -o BoundCond.o
 	$(FC) $(FO) io.f90 -o io.o
 	$(FC) $(FO) diagnostic.f90 -o diagnostic.o 
 	$(FC) $(FO) ShearStress.f90  -o ShearStress.o
