@@ -125,10 +125,10 @@ subroutine boundary_condition()
   case('periodic') 
      call pbcx()
   case('dirichlet')
-     v_const = 0.02
+     v_const = 0.02  !v_const < 0.2
      call const_vleft(v_const)
   case('const_v')
-     vel(1) = 0.02
+     vel(1) = 0.05
      vel(2) = 0.0d0
      call const_velocity(vel)
   case default
@@ -140,7 +140,7 @@ subroutine boundary_condition()
   select case(bc_right)
   case('periodic')
   case('dirichlet')
-     v_const = 0.02
+     v_const = 0.02 !v_const < 0.2
      call const_vright(v_const)
   case('right_copied')
      call right_copy()

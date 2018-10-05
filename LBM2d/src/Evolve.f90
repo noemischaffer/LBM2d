@@ -17,8 +17,10 @@ module Evolve
   implicit none
   private
   public :: stream,comp_equilibrium_BGK,get_feq,collision, allocate_shear,free_shear
+  public :: allocate_force, free_force
   integer,allocatable,dimension(:) :: iin_pencil
   logical :: lshear=.false.
+  logical :: lforce=.false.
 !------the following are public ------------
 !-------------------------------------------
 contains
@@ -38,6 +40,14 @@ subroutine allocate_shear()
   lshear=.true.
 
 endsubroutine allocate_shear
+!**************************************************************************
+subroutine allocate_force()
+
+  allocate(forces(Nx+2,Ny+2,2))
+  forces=0.0d0
+  lforce=.true.
+
+endsubroutine allocate_force
 !*************************************************************************
 subroutine stream()
 
@@ -107,7 +117,9 @@ subroutine collision()
 ! If a point is solid(1)   : do nothing
 !               surface(0) : bounce-back
 !               fluid(-1)  : collision  
-!  
+!
+! Sigma is the shear stress tensor from Jäger et al 2017
+  
   sigma=0.0d0
   do q=1,qmom
      do l=2,Ny+1
@@ -136,5 +148,13 @@ subroutine free_shear()
   endif
 
 endsubroutine free_shear
+!***************************************************************
+subroutine free_force()
+
+  if (lforce .eqv. .true.) then
+     deallocate(forces)
+  endif
+
+endsubroutine free_force
 !***************************************************************
 endmodule Evolve

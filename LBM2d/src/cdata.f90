@@ -20,19 +20,23 @@ module Cdata
   double precision :: Re=10.0d0
   double precision,allocatable, dimension(:,:,:) :: ff,fftemp,ffEq
   integer, allocatable, dimension(:,:) :: is_solid
+  integer, allocatable, dimension(:,:) :: mass
+  double precision, allocatable, dimension(:,:) :: dm
   logical::lffaloc=.false.
   logical :: lstart=.true.
   integer :: iTMAX=0
   integer, allocatable, dimension(:,:) :: surface
   double precision, allocatable, dimension(:,:,:,:) :: sigma
-  double precision, allocatable, dimension(:,:) :: curl_uu
+  double precision, allocatable, dimension(:,:) ::curl_uu 
+  double precision, allocatable,dimension(:,:,:):: forces
+  !double precision, allocatable, dimension(:,:) :: fdrag 
   double precision, allocatable, dimension(:) ::xx,yy
   integer :: Nts=0
   integer :: ndiag=1
   double precision, allocatable,dimension(:) :: ts_data
   character(len=labellen), allocatable,dimension(:) :: ts_name
   integer :: Nlarge = 1
-  integer :: Nsurf
+  integer :: Nsurf = 0
   double precision :: radius, center_x, center_y, v_const
 !
 namelist /cdata_pars/ &
@@ -59,12 +63,18 @@ integer :: i,j
 ! manner. If it is  1  it is solid point
 !                   0 as it is a boundary point
 !                   -1 it is a fluid point
+!
+! mass = 1 for solid nodes
+! mass = 0 for fluid nodes
+! mass = 0 for surface nodes
 !---------------------------------------
   allocate(is_solid(Nx+2,Ny+2))
+  allocate(mass(Nx+2,Ny+2))
 !
 ! first assume that all points are fluid
 ! this array is overwritten when the obstacles are set
   is_solid=-1
+  mass=0 
   allocate(ff(Nx+2,Ny+2,qmom))
   ff=0.0d0
   ff(:,:,5) = 1.0d0

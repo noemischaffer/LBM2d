@@ -102,12 +102,13 @@ subroutine rwrite_density_uu()
     enddo
   enddo
 
-  open(unit=11, file='velocity.txt', action='write', status='replace')
-  write(11,*) Nx
-  write(11,*) Ny
+  open(unit=11, file='velocity_x.dat', action='write', status='replace')
   write(11,*) uu(:,:,1)
-  write(11,*) uu(:,:,2)
   close(11)
+
+  open(unit=2, file='velocity_y.dat', action='write', status='replace')
+  write(2,*) uu(:,:,2)
+  close(2)
 
   open(unit=12, file='velocity_math_vx.dat', action='write', status='replace')
   do k=1,Nx+2

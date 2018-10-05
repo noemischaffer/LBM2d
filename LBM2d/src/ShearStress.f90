@@ -16,15 +16,18 @@ contains
 !**************************************************************************
 subroutine wall_shear()
 
+!
+! The wall shear force is calculated at tau=normal vector dot sigma
+!
 use Sub
 
 integer :: q,mu,nu,k,l,m,n 
-double precision, dimension(Nx+2,Ny+2,2):: force
+!double precision, dimension(Nx+2,Ny+2,2):: force
 double precision, dimension(2) :: force_tmp, unnorm
-double precision :: fdrag,flift, magn, unnorm_x, unnorm_y, magn_sq
+double precision :: fdrag,flift,magn, unnorm_x, unnorm_y, magn_sq
 double precision, dimension(qmom) :: norm_x
 
-force=0.0d0
+forces=0.0d0
 
   do l=2,Ny+1
     do k=2,Nx+1
@@ -36,20 +39,22 @@ force=0.0d0
           m=k-ee_int(1,q)
           if((is_solid(m,n).eq.-1)) then 
             call dotmv(sigma(m,n,:,:),ee(:,q),force_tmp)
-            force(k,l,:)=force(k,l,:)+force_tmp
+            forces(k,l,:)=forces(k,l,:)+force_tmp
             unnorm_x = unnorm_x + ee(1,q)
             unnorm_y = unnorm_y + ee(2,q)
           endif
         enddo
         magn_sq = unnorm_x**2+unnorm_y**2
-        force(k,l,:)=force(k,l,:)/sqrt(magn_sq) 
-        fdrag=fdrag+force(k,l,1)
-        flift=flift+force(k,l,2)
+        forces(k,l,:)=forces(k,l,:)/sqrt(magn_sq) 
+        fdrag=fdrag+forces(k,l,1)
+        flift=flift+forces(k,l,2)
       endif
     enddo
   enddo
 
-  write(*,*) fdrag, flift
+
+  write(*,*) fdrag, ' drag force'
+  write(*,*) flift, ' lift force'
 
   open(unit=9, file='sigma_xx.dat', action='write', status='replace')
   do k=1, Nx
@@ -77,13 +82,13 @@ force=0.0d0
 
   open(unit=12, file='drag.dat', action='write', status='replace')
   do k=1, Nx
-    write(12,*) (force(k,l,1), l=1,Ny)
+    write(12,*) (forces(k,l,1), l=1,Ny)
   enddo
   close(12)
  
   open(unit=13, file='lift.dat', action='write', status='replace')
   do k=1, Nx
-    write(13,*) (force(k,l,2), l=1,Ny)
+    write(13,*) (forces(k,l,2), l=1,Ny)
   enddo
   close(13)
 
