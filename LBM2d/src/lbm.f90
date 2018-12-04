@@ -57,22 +57,22 @@ if (lstart) then
    call boundary_condition()
    call update_surface()
   !Save the original surface points
-  open(unit=13, file='surface_pointx_original_eroded.dat', action='write', status='replace')
-  do l=2,Ny-1
-    do k=2, Nx-1
-      if(is_solid(k,l).eq.0) then
-        write(13,*) k
-      endif
-    enddo
-  enddo
-  open(unit=12, file='surface_pointy_original_eroded.dat', action='write', status='replace')
-    do l=2,Ny-1
-      do k=2, Nx-1
-        if(is_solid(k,l).eq.0) then
-          write(12,*) l
-        endif
-      enddo
-   enddo
+  !open(unit=13, file='surface_pointx_original_eroded.dat', action='write', status='replace')
+  !do l=2,Ny-1
+  !  do k=2, Nx-1
+  !    if(is_solid(k,l).eq.0) then
+  !      write(13,*) k
+  !    endif
+  !  enddo
+  !enddo
+  !open(unit=12, file='surface_pointy_original_eroded.dat', action='write', status='replace')
+   ! do l=2,Ny-1
+   !   do k=2, Nx-1
+   !     if(is_solid(k,l).eq.0) then
+   !       write(12,*) l
+   !     endif
+   !   enddo
+   !enddo
    call initialize_diag()
    call calc_avg()
    call write_ts(0)
@@ -83,9 +83,21 @@ else
    write(*,*) '============================================'
 endif
 write(*,*) '=== Starting time stepping ================='
+select case (obstacle_type)
+  case('circle')
+   tflow=(2*radius)/v_const !If shape is a circle
+  case('ellipse')
+    tflow=(2*aa)/v_const 
+  case('67P')
+   tflow=(4*radius)/v_const !If shape is a circle
+  case('rectangle')
+    tflow=(2*(point_rb_x-point_lb_x))/v_const !If shape is a rectangle
+  case default
+     call fatal_error('initialize_obstacle',&
+       'obstacle_type not coded! ')
+endselect
 !do it=1,iTMAX
 it=0
-tflow=radius/v_const
 do while (it .le. tflow)
   it=it+1
   call boundary_condition()
@@ -94,24 +106,9 @@ do while (it .le. tflow)
   call comp_equilibrium_BGK()
   call collision()
   call wall_shear()
-  !call update_surface()
   call mass_loss()
   call calc_diag()
   call write_ts(it)
-  if (mod(it,1) .eq. 0) then
-    WRITE (filename, '(a,I5.5,a)') 'velocitx_series',it,'.dat'
-    open(unit=10, file=filename, action='write', status='replace')
-     do k=1, Nx+2
-       write(10,*) (uu(k,l,1), l=1,Ny+2)
-     enddo
-    close(10)
-    WRITE (filenama, '(a,I5.5,a)') 'velocity_series',it,'.dat'
-    open(unit=11, file=filenama, action='write', status='replace')
-     do k=1, Nx+2
-       write(11,*) (uu(k,l,2), l=1,Ny+2)
-     enddo
-    close(11)
-  endif
 enddo
 call update_surface()
 !Save surface boundary for next run
@@ -124,9 +121,7 @@ open(unit=19, file='updated_boundary.txt', action='write', status='replace')
 close(19)
 write(*,*) '......done'
 write(*,*) '===writing the final snapshot ============'
-!call write_snap(iTMAX)
 call rwrite_density_uu()
-!call wall_shear()
 call theo_solution()
 write(*,*) '=========================================='
 call free_avg()

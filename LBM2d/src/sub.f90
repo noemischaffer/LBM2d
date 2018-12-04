@@ -6,7 +6,7 @@ module Sub
   double precision :: tini = 5.0d0*TINY(1.0d0) 
 contains
 !***************************************************************
-subroutine normalize2d(vec2d)
+subroutine normalize2d(vec2d, norm)
   double precision,dimension(2) :: vec2d
   double precision :: norm
   norm=sqrt(dot2d(vec2d,vec2d))

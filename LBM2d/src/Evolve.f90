@@ -66,6 +66,7 @@ subroutine stream()
            case(0)
               p=mirrorq(q)
               ff(k,l,p) = fftemp(k,l,q) ! reflect back if surface point
+              ! Put porosity here
            endselect
         enddo
      enddo
@@ -107,7 +108,6 @@ subroutine get_feq(q,uin,rhoin,fEq)
               +(9.0d0/2.0d0)*(uxy**2) &
               -(3.0d0/2.0d0)*usqr &
                )
-
 endsubroutine get_feq
 !***************************************************************
 subroutine collision()

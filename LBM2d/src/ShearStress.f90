@@ -8,6 +8,7 @@ use Cdata
 use Evolve
 use Avg
 use InitCond
+use Messages
 implicit none
 private
 public :: wall_shear, theo_solution
@@ -107,9 +108,21 @@ double precision :: Re, ratio
 ! vx= - d(psi)/d(y)
 ! vy=  d(psi)/d(x)
 
-  Re = (v_const*radius)/((1.0d0/3.0d0)*(tau-(1.0d0/2.0d0)))
+select case (obstacle_type)
+  case('circle')
+    Re = (v_const*radius)/((1.0d0/3.0d0)*(tau-(1.0d0/2.0d0)))
+  case('67P')
+    Re = (v_const*radius)/((1.0d0/3.0d0)*(tau-(1.0d0/2.0d0)))
+  case('ellipse')
+    Re = (v_const*aa)/((1.0d0/3.0d0)*(tau-(1.0d0/2.0d0)))
+  case('rectangle')
+    Re = (v_const*(point_rb_x-point_lb_x))/((1.0d0/3.0d0)*(tau-(1.0d0/2.0d0)))
+  case default
+    call fatal_error('initialize_obstacle',&
+        'obstacle_type not coded! ')
+  endselect
   write(*,*) Re, 'this is the reynolds number'
- 
+
   do l=2,Ny+1
     ll=l
     do k=2,Nx+1

@@ -3,6 +3,14 @@ module Cdata
   implicit none
   public
 !***********************!
+!
+! Conversion of dimensionless code units to physical units
+!
+!rho = 1 g/cm^3
+!dx = 50 m
+!dv = 50 m/s
+!nu = dx*dz/1 (where Re=1)
+!***********************!
   real,parameter :: d_pi = 3.14159265358979323846264338327950288419716939937510D+00
   integer,parameter :: labellen=25
   integer,parameter :: qmom = 9 ! we are solving the D2Q9 model
@@ -20,8 +28,9 @@ module Cdata
   double precision :: Re=10.0d0
   double precision,allocatable, dimension(:,:,:) :: ff,fftemp,ffEq
   integer, allocatable, dimension(:,:) :: is_solid
-  integer, allocatable, dimension(:,:) :: mass
-  double precision, allocatable, dimension(:,:) :: dm
+!  double precision, allocatable, dimension(:,:) :: dm !mass loss at each surface point from stress
+  double precision, allocatable, dimension(:,:) :: tau_magn !wall shear stress at each point on surface as the magnitude of the drag and lift force
+ ! double precision :: dm_total !total mass lost over whole surface after 1 iteration
   logical::lffaloc=.false.
   logical :: lstart=.true.
   integer :: iTMAX=0
@@ -38,6 +47,12 @@ module Cdata
   integer :: Nlarge = 1
   integer :: Nsurf = 0
   double precision :: radius, center_x, center_y, v_const
+  double precision :: point_lb_x, point_lb_y, point_lt_x
+  double precision :: point_lt_y, point_rb_x, point_rb_y
+  double precision :: overlap
+  double precision :: aa, bb
+  double precision :: erosion_param !dimensionless erosion parameter, tau_wall/tau_er
+  character (len=labellen) :: obstacle_type='none'
 !
 namelist /cdata_pars/ &
      Nx,Ny,tau,iTMAX,lstart,ndiag,Re
@@ -69,12 +84,10 @@ integer :: i,j
 ! mass = 0 for surface nodes
 !---------------------------------------
   allocate(is_solid(Nx+2,Ny+2))
-  allocate(mass(Nx+2,Ny+2))
 !
 ! first assume that all points are fluid
 ! this array is overwritten when the obstacles are set
   is_solid=-1
-  mass=0 
   allocate(ff(Nx+2,Ny+2,qmom))
   ff=0.0d0
   ff(:,:,5) = 1.0d0

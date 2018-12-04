@@ -46,7 +46,11 @@ subroutine get_uforce(ii,jj,uout)
   double precision,dimension(2), intent(out) :: uout
   double precision, dimension(2) :: gg,force
   double precision :: rhoin
-  double precision, dimension(2) :: uin
+  double precision, dimension(2) :: uin, forcing
+  double precision, dimension(Nx+1,Ny+1) :: ss
+  double precision :: beta
+
+  beta=0.125  
 
   uin=uu(ii,jj,:)
   rhoin=rho(ii,jj)
@@ -68,6 +72,16 @@ subroutine get_uforce(ii,jj,uout)
     force(1)=0.0d0
     force(2)=famp*sin(2.0d0*d_pi*kk*xx(ii)/Lx)
     uout=uin+(tau*force/rhoin)
+  case('porous')
+    ! set ss to 0 at fluid points and solid points because there porosity
+    ! doesn't matter since fluid doesn't go there
+    if (is_solid(ii,jj).eq.0) then
+      ss(ii,jj)=1
+    endif
+    forcing=-beta*rhoin*uin
+    force(1)=ss(ii,jj)*((tau*forcing(1))/rhoin)
+    force(2)=ss(ii,jj)*((tau*forcing(2))/rhoin)
+    uout=uin+(tau*force/rhoin)  !Second term is change in vel due to porosity
   case default
      call fatal_error("force","iforce does not match")
   endselect
